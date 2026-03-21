@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -10,6 +11,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import debounce from "lodash.debounce";
 import { useAuthStore } from "../../store/authStore";
@@ -26,15 +28,11 @@ import {
 
 const ICONS = ["🚶", "🏖️", "⛰️", "✈️", "🚴", "⛺"];
 const GOAL_TYPES = ["individual", "cooperative", "race"];
-const GOAL_TYPE_LABELS = {
-  individual: "Individual",
-  cooperative: "Cooperative",
-  race: "Race",
-};
 
 const DEFAULT_START = { latitude: 47.4979, longitude: 19.0402 }; // Budapest
 
 export default function CreateGoalModal({ visible, onDismiss }) {
+  const { t } = useTranslation();
   const { firebaseUser, currentUserProfile } = useAuthStore();
 
   const [goalName, setGoalName] = useState("");
@@ -57,7 +55,7 @@ export default function CreateGoalModal({ visible, onDismiss }) {
       } else {
         setResults([]);
       }
-    }, 400)
+    }, 400),
   ).current;
 
   const estimatedSteps =
@@ -161,19 +159,19 @@ export default function CreateGoalModal({ visible, onDismiss }) {
               onDismiss();
             }}
           >
-            <Text style={styles.cancel}>Cancel</Text>
+            <Text style={styles.cancel}>{t("general.cancel")}</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>New Journey</Text>
+          <Text style={styles.headerTitle}>{t("journey.new_journey")}</Text>
           <View style={{ width: 60 }} />
         </View>
 
         {/* Search fields */}
         <View style={styles.searchBlock}>
           <View style={styles.searchRow}>
-            <Text style={styles.searchDot}>🔵</Text>
+            <Ionicons name="radio-button-on" size={16} color={Colors.accent} />
             <TextInput
               style={styles.searchInput}
-              placeholder="From... (optional)"
+              placeholder={t("journey.from")}
               placeholderTextColor={Colors.textTertiary}
               value={fromText}
               onChangeText={(v) => handleSearch(v, "from")}
@@ -182,10 +180,10 @@ export default function CreateGoalModal({ visible, onDismiss }) {
             />
           </View>
           <View style={styles.searchRow}>
-            <Text style={styles.searchDot}>📍</Text>
+            <Ionicons name="location" size={16} color={Colors.accent} />
             <TextInput
               style={styles.searchInput}
-              placeholder="To..."
+              placeholder={t("journey.to")}
               placeholderTextColor={Colors.textTertiary}
               value={toText}
               onChangeText={(v) => handleSearch(v, "to")}
@@ -216,11 +214,11 @@ export default function CreateGoalModal({ visible, onDismiss }) {
           <ScrollView contentContainerStyle={styles.formContent}>
             {/* Journey name */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>JOURNEY DETAILS</Text>
+              <Text style={styles.sectionTitle}>{t("journey.journey_details").toUpperCase()}</Text>
               <View style={styles.card}>
                 <TextInput
                   style={styles.nameInput}
-                  placeholder="Name your trip (e.g. Summer Trek)"
+                  placeholder={t("journey.journey_name_hint")}
                   placeholderTextColor={Colors.textTertiary}
                   value={goalName}
                   onChangeText={setGoalName}
@@ -231,7 +229,7 @@ export default function CreateGoalModal({ visible, onDismiss }) {
 
             {/* Journey type */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>JOURNEY TYPE</Text>
+              <Text style={styles.sectionTitle}>{t("journey.journey_type").toUpperCase()}</Text>
               <View style={styles.segmented}>
                 {GOAL_TYPES.map((type) => (
                   <TouchableOpacity
@@ -248,7 +246,7 @@ export default function CreateGoalModal({ visible, onDismiss }) {
                         selectedType === type && styles.segmentTextActive,
                       ]}
                     >
-                      {GOAL_TYPE_LABELS[type]}
+                      {t(`journey.${type}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -258,11 +256,10 @@ export default function CreateGoalModal({ visible, onDismiss }) {
             {/* Share code */}
             {selectedType !== "individual" && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>INVITE FRIENDS</Text>
+                <Text style={styles.sectionTitle}>{t("journey.group_code").toUpperCase()}</Text>
                 <View style={styles.card}>
                   <Text style={styles.shareCaption}>
-                    Share this code with friends to let them join this{" "}
-                    {selectedType} journey.
+                    {t("journey.share_code_instructions", { name: t(`journey.${selectedType}`) })}
                   </Text>
                   <View style={styles.shareRow}>
                     <Text style={styles.shareCode}>{shareCode}</Text>
@@ -270,7 +267,7 @@ export default function CreateGoalModal({ visible, onDismiss }) {
                       style={styles.copyButton}
                       onPress={() => Clipboard.setStringAsync(shareCode)}
                     >
-                      <Text style={styles.copyButtonText}>Copy</Text>
+                      <Text style={styles.copyButtonText}>{t("general.copy")}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -279,7 +276,7 @@ export default function CreateGoalModal({ visible, onDismiss }) {
 
             {/* Icon picker */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>CHOOSE AN ICON</Text>
+              <Text style={styles.sectionTitle}>{t("journey.journey_icon").toUpperCase()}</Text>
               <View style={styles.card}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.iconRow}>
@@ -303,10 +300,10 @@ export default function CreateGoalModal({ visible, onDismiss }) {
             {/* Summary */}
             {toCoord && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>SUMMARY</Text>
+                <Text style={styles.sectionTitle}>{t("progress.summary").toUpperCase()}</Text>
                 <View style={styles.card}>
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Estimated Distance</Text>
+                    <Text style={styles.summaryLabel}>{t("progress.estimated_distance")}</Text>
                     <Text style={styles.summaryValue}>
                       {estimatedSteps.toLocaleString()} steps
                     </Text>
@@ -331,7 +328,7 @@ export default function CreateGoalModal({ visible, onDismiss }) {
             {isCreating ? (
               <ActivityIndicator color={Colors.textInverse} />
             ) : (
-              <Text style={styles.createButtonText}>Create Journey</Text>
+              <Text style={styles.createButtonText}>{t("journey.create_journey").toUpperCase()}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -353,11 +350,17 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.divider,
   },
   headerTitle: {
+    fontFamily: Typography.fontHeading,
     fontSize: Typography.md,
-    fontWeight: "700",
     color: Colors.textPrimary,
+    letterSpacing: Typography.tight,
   },
-  cancel: { fontSize: Typography.base, color: Colors.primary, width: 60 },
+  cancel: {
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.base,
+    color: Colors.accent,
+    width: 60,
+  },
   searchBlock: {
     backgroundColor: Colors.background,
     padding: Spacing.base,
@@ -368,15 +371,17 @@ const styles = StyleSheet.create({
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.backgroundAlt,
+    backgroundColor: Colors.surfaceHigh,
     borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
     paddingHorizontal: Spacing.sm,
     gap: Spacing.sm,
   },
-  searchDot: { fontSize: 16 },
   searchInput: {
     flex: 1,
     height: 44,
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
     color: Colors.textPrimary,
   },
@@ -387,11 +392,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   resultName: {
+    fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.base,
-    fontWeight: "600",
     color: Colors.textPrimary,
   },
   resultFull: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.xs,
     color: Colors.textSecondary,
     marginTop: 2,
@@ -399,20 +405,24 @@ const styles = StyleSheet.create({
   formContent: { padding: Spacing.base, gap: Spacing.base, paddingBottom: 100 },
   section: { gap: Spacing.xs },
   sectionTitle: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
     color: Colors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: Typography.widest,
     marginLeft: Spacing.xs,
   },
   card: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.md,
     padding: Spacing.base,
     gap: Spacing.sm,
     ...Shadows.sm,
   },
-  nameInput: { fontSize: Typography.base, color: Colors.textPrimary },
+  nameInput: {
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.base,
+    color: Colors.textPrimary,
+  },
   segmented: {
     flexDirection: "row",
     backgroundColor: Colors.backgroundAlt,
@@ -425,14 +435,23 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm - 2,
     alignItems: "center",
   },
-  segmentActive: { backgroundColor: Colors.background, ...Shadows.sm },
+  segmentActive: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+    ...Shadows.sm,
+  },
   segmentText: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.sm,
     color: Colors.textSecondary,
-    fontWeight: "500",
   },
-  segmentTextActive: { color: Colors.textPrimary, fontWeight: "700" },
+  segmentTextActive: {
+    fontFamily: Typography.fontBodyMedium,
+    color: Colors.textPrimary,
+  },
   shareCaption: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.xs,
     color: Colors.textSecondary,
     lineHeight: 18,
@@ -443,22 +462,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   shareCode: {
+    fontFamily: Typography.fontDisplay,
     fontSize: 24,
-    fontWeight: "700",
-    fontFamily: "monospace",
-    color: Colors.primary,
+    color: Colors.textAccent,
     letterSpacing: 4,
   },
   copyButton: {
-    backgroundColor: Colors.backgroundAlt,
+    backgroundColor: Colors.accentGlow,
     borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
   },
   copyButtonText: {
-    fontSize: Typography.sm,
-    color: Colors.primary,
-    fontWeight: "600",
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
+    color: Colors.textAccent,
+    letterSpacing: Typography.wide,
   },
   iconRow: {
     flexDirection: "row",
@@ -469,11 +490,13 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: Radius.full,
     backgroundColor: Colors.backgroundAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   iconButtonActive: {
-    backgroundColor: `${Colors.primary}20`,
+    backgroundColor: Colors.accentGlow,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: Colors.accent,
   },
   iconEmoji: { fontSize: 24 },
   summaryRow: {
@@ -481,25 +504,30 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  summaryLabel: { fontSize: Typography.base, color: Colors.textPrimary },
-  summaryValue: {
+  summaryLabel: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
-    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  summaryValue: {
+    fontFamily: Typography.fontBodyMedium,
+    fontSize: Typography.base,
     color: Colors.textPrimary,
   },
   createButton: {
     margin: Spacing.base,
-    backgroundColor: Colors.textPrimary,
-    borderRadius: Radius.lg,
-    height: 55,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.sm,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
     ...Shadows.md,
   },
   createButtonDisabled: { backgroundColor: Colors.disabled },
   createButtonText: {
+    fontFamily: Typography.fontLabel,
     color: Colors.textInverse,
-    fontSize: Typography.base,
-    fontWeight: "700",
+    fontSize: Typography.xs,
+    letterSpacing: Typography.widest,
   },
 });

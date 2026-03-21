@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import {
   View,
@@ -8,6 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
 import { joinGoal } from "../../services/goalService";
 import { grantTeamPlayerBadge } from "../../services/userService";
@@ -20,6 +22,7 @@ import {
 } from "../../constants/theme";
 
 export default function JoinGroupModal({ visible, onDismiss }) {
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -44,9 +47,12 @@ export default function JoinGroupModal({ visible, onDismiss }) {
       setCode("");
       onDismiss();
     } catch (err) {
-      setErrorMessage(
-        "No journey found with this code. Please check and try again.",
-      );
+      console.error("joinGoal error:", err?.code, err?.message);
+      if (err?.code === "permission-denied") {
+        setErrorMessage(t("journey.join_permission_denied"));
+      } else {
+        setErrorMessage(t("journey.code_not_found"));
+      }
     } finally {
       setIsSearching(false);
     }
@@ -62,22 +68,22 @@ export default function JoinGroupModal({ visible, onDismiss }) {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onDismiss}>
-            <Text style={styles.cancel}>Cancel</Text>
+            <Text style={styles.cancel}>{t("general.cancel")}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.icon}>🗝️</Text>
-          <Text style={styles.title}>Join a Group Journey</Text>
-          <Text style={styles.subtitle}>
-            Enter the 6-digit code shared by your friend to join their progress.
-          </Text>
+          <View style={styles.iconWrapper}>
+            <Ionicons name="key-outline" size={40} color={Colors.accent} />
+          </View>
+          <Text style={styles.title}>{t("journey.join_group_title")}</Text>
+          <Text style={styles.subtitle}>{t("journey.join_instructions")}</Text>
 
           <TextInput
             style={styles.codeInput}
             value={code}
             onChangeText={(val) => setCode(val.toUpperCase().slice(0, 6))}
-            placeholder="E.G. XY789"
+            placeholder={t("journey.group_code_hint")}
             placeholderTextColor={Colors.textTertiary}
             autoCapitalize="characters"
             autoCorrect={false}
@@ -100,7 +106,7 @@ export default function JoinGroupModal({ visible, onDismiss }) {
             {isSearching ? (
               <ActivityIndicator color={Colors.textInverse} />
             ) : (
-              <Text style={styles.joinButtonText}>Join Journey</Text>
+              <Text style={styles.joinButtonText}>{t("journey.join_journey").toUpperCase()}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -122,8 +128,9 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   cancel: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
-    color: Colors.primary,
+    color: Colors.accent,
   },
   content: {
     flex: 1,
@@ -132,43 +139,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xxl,
     gap: Spacing.md,
   },
-  icon: {
-    fontSize: 60,
+  iconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.accentGlow,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
+    fontFamily: Typography.fontDisplay,
     fontSize: Typography.xxl,
-    fontWeight: "700",
+    letterSpacing: Typography.tight,
     textAlign: "center",
     color: Colors.textPrimary,
   },
   subtitle: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.sm,
     color: Colors.textSecondary,
     textAlign: "center",
     lineHeight: 20,
   },
   codeInput: {
-    fontSize: 32,
-    fontWeight: "700",
-    fontFamily: "monospace",
+    fontFamily: Typography.fontDisplay,
+    fontSize: 36,
     textAlign: "center",
-    backgroundColor: Colors.backgroundAlt,
+    backgroundColor: Colors.surfaceHigh,
     borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
     padding: Spacing.base,
     width: "100%",
     marginTop: Spacing.lg,
-    color: Colors.textPrimary,
+    color: Colors.textAccent,
     letterSpacing: 8,
   },
   error: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.xs,
     color: Colors.error,
     textAlign: "center",
   },
   joinButton: {
-    backgroundColor: Colors.textPrimary,
-    borderRadius: Radius.lg,
-    height: 55,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.sm,
+    height: 52,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
@@ -178,8 +196,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.disabled,
   },
   joinButtonText: {
+    fontFamily: Typography.fontLabel,
     color: Colors.textInverse,
-    fontSize: Typography.base,
-    fontWeight: "700",
+    fontSize: Typography.xs,
+    letterSpacing: Typography.widest,
   },
 });

@@ -3,12 +3,14 @@ import { Colors } from "../../src/constants/theme";
 import { BlurView } from "expo-blur";
 import { StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 const TabIcon = ({ name, color }) => (
   <Ionicons name={name} size={24} color={color} />
 );
 
 export default function TabLayout() {
+  const { t } = useTranslation();
   return (
     <Tabs
       screenOptions={{
@@ -28,21 +30,21 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Map",
+          title: t("journey.map"),
           tabBarIcon: ({ color }) => <TabIcon name="map" color={color} />,
         }}
       />
       <Tabs.Screen
         name="goals"
         options={{
-          title: "Goals",
+          title: t("progress.goals"),
           tabBarIcon: ({ color }) => <TabIcon name="flag" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("profile.title"),
           tabBarIcon: ({ color }) => (
             <TabIcon name="person-circle" color={color} />
           ),

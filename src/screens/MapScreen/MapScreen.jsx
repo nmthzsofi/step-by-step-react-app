@@ -7,13 +7,15 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import MapView, { Marker, Polyline, Callout } from "react-native-maps";
+import { Ionicons } from "@expo/vector-icons";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import { useGoalStore } from "../../store/goalStore";
 import { useAuthStore } from "../../store/authStore";
 import GoalProgressCard from "../../components/GoalProgressCard/GoalProgressCard";
 import AddActivityModal from "../../components/AddActivityModal/AddActivityModal";
 import CelebrationView from "../../components/CelebrationView/CelebrationView";
-import { Colors, Spacing, Shadows, Radius } from "../../constants/theme";
+import { useTranslation } from "react-i18next";
+import { Colors, Typography, Spacing, Shadows, Radius } from "../../constants/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -29,13 +31,16 @@ const calculateProgressCoordinate = (progress, goal) => {
   };
 };
 
-const MemberBubble = ({ name, color }) => (
-  <View style={[styles.bubble, { backgroundColor: color }]}>
-    <Text style={styles.bubbleText}>{name.charAt(0).toUpperCase()}</Text>
+const MemberBubble = ({ name, isSelf }) => (
+  <View style={[styles.bubble, isSelf ? styles.bubbleSelf : styles.bubbleOther]}>
+    <Text style={[styles.bubbleText, isSelf ? styles.bubbleTextSelf : styles.bubbleTextOther]}>
+      {name.charAt(0).toUpperCase()}
+    </Text>
   </View>
 );
 
 export default function MapScreen() {
+  const { t } = useTranslation();
   const mapRef = useRef(null);
   const [showAddActivity, setShowAddActivity] = useState(false);
 
@@ -55,7 +60,7 @@ export default function MapScreen() {
       ? goals[selectedIndex]
       : null;
 
-  // Focus map on selected goal — mirrors updateMapFocus()
+  // Focus map on selected goal
   useEffect(() => {
     if (!selectedGoal || !mapRef.current) return;
     mapRef.current.fitToCoordinates(
@@ -92,7 +97,7 @@ export default function MapScreen() {
         title={selectedGoal.name}
       >
         <View style={styles.destinationMarker}>
-          <Text style={styles.destinationIcon}>🎯</Text>
+          <Ionicons name="location" size={30} color={Colors.accent} />
         </View>
       </Marker>,
     );
@@ -126,7 +131,7 @@ export default function MapScreen() {
           >
             <MemberBubble
               name={member.firstName}
-              color={member.id === uid ? Colors.warning : Colors.primary}
+              isSelf={member.id === uid}
             />
           </Marker>,
         );
@@ -148,20 +153,17 @@ export default function MapScreen() {
       })();
 
       const coord = calculateProgressCoordinate(progress, selectedGoal);
+      const displayName =
+        selectedGoal.type === "cooperative"
+          ? "G"
+          : (myMember?.firstName ?? "Me");
       markers.push(
         <Marker
           key="my-bubble"
           coordinate={coord}
           title={myMember?.firstName ?? "Me"}
         >
-          <MemberBubble
-            name={
-              selectedGoal.type === "cooperative"
-                ? "👥"
-                : (myMember?.firstName ?? "Me")
-            }
-            color={Colors.warning}
-          />
+          <MemberBubble name={displayName} isSelf />
         </Marker>,
       );
     }
@@ -190,20 +192,20 @@ export default function MapScreen() {
                 longitude: selectedGoal.coordinates.longitude,
               },
             ]}
-            strokeColor="rgba(0,122,255,0.3)"
+            strokeColor="rgba(201,169,110,0.45)"
             strokeWidth={4}
           />
         </MapView>
       ) : (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>🗺️</Text>
-          <Text style={styles.emptyText}>Loading Adventure...</Text>
+          <Ionicons name="map-outline" size={56} color={Colors.textTertiary} />
+          <Text style={styles.emptyText}>{t("journey.no_goals_map")}</Text>
         </View>
       )}
 
       {/* UI overlay */}
       <View style={styles.overlay} pointerEvents="box-none">
-        {/* Goal cards pager — mirrors SwiftUI TabView PageTabViewStyle */}
+        {/* Goal cards pager */}
         {goals.length > 0 && (
           <ScrollView
             horizontal
@@ -234,7 +236,7 @@ export default function MapScreen() {
 
         <View style={styles.spacer} />
 
-        {/* Add Activity button — mirrors SwiftUI Capsule button */}
+        {/* Add Activity button */}
         <TouchableOpacity
           style={[
             styles.addButton,
@@ -244,7 +246,8 @@ export default function MapScreen() {
           disabled={goals.length === 0}
           activeOpacity={0.85}
         >
-          <Text style={styles.addButtonText}>＋ Add Activity</Text>
+          <Ionicons name="add" size={18} color={Colors.textInverse} />
+          <Text style={styles.addButtonText}>{t("fitness.add_activity").toUpperCase()}</Text>
         </TouchableOpacity>
       </View>
 
@@ -274,7 +277,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "space-between",
-    paddingBottom: 90, // above tab bar
+    paddingBottom: 90,
   },
   cardScroller: {
     flexGrow: 0,
@@ -293,11 +296,13 @@ const styles = StyleSheet.create({
   },
   addButton: {
     alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
     backgroundColor: Colors.textPrimary,
     borderRadius: Radius.full,
     paddingHorizontal: 40,
     height: 60,
-    alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.lg,
     ...Shadows.md,
@@ -306,9 +311,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.disabled,
   },
   addButtonText: {
+    fontFamily: Typography.fontLabel,
     color: Colors.textInverse,
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: Typography.xs,
+    letterSpacing: Typography.widest,
   },
   emptyState: {
     flex: 1,
@@ -316,20 +322,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: Spacing.md,
   },
-  emptyIcon: {
-    fontSize: 60,
-  },
   emptyText: {
-    fontSize: 18,
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.base,
     color: Colors.textSecondary,
-    fontWeight: "600",
   },
   destinationMarker: {
     alignItems: "center",
     justifyContent: "center",
-  },
-  destinationIcon: {
-    fontSize: 30,
   },
   bubble: {
     width: 34,
@@ -338,12 +338,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: Colors.textInverse,
     ...Shadows.sm,
   },
+  bubbleSelf: {
+    backgroundColor: Colors.accent,
+    borderColor: Colors.surface,
+  },
+  bubbleOther: {
+    backgroundColor: Colors.surface,
+    borderColor: Colors.borderMid,
+  },
   bubbleText: {
-    color: Colors.textInverse,
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: Typography.fontLabelBold,
+  },
+  bubbleTextSelf: {
+    color: Colors.textInverse,
+  },
+  bubbleTextOther: {
+    color: Colors.textPrimary,
   },
 });

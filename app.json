@@ -5,7 +5,8 @@
     "scheme": "lepesrol-lepesre-react",
     "plugins": [
       "expo-router",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ]
   }
 }

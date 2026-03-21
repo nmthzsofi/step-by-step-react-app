@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef } from "react";
 import {
   View,
@@ -14,36 +15,37 @@ import { Colors, Typography, Spacing, Radius } from "../../constants/theme";
 const { width } = Dimensions.get("window");
 
 export default function CelebrationView({ title, message, onDismiss }) {
+  const { t } = useTranslation();
   const scale = useRef(new Animated.Value(0.8)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const bounceY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Entry animation — mirrors SwiftUI .spring()
     Animated.parallel([
       Animated.spring(scale, {
         toValue: 1,
-        damping: 10,
+        damping: 12,
+        stiffness: 110,
+        mass: 0.8,
         useNativeDriver: true,
       }),
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 300,
+        duration: 350,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Bounce emoji — mirrors SwiftUI phaseAnimator
     Animated.loop(
       Animated.sequence([
         Animated.timing(bounceY, {
           toValue: -20,
-          duration: 1000,
+          duration: 900,
           useNativeDriver: true,
         }),
         Animated.timing(bounceY, {
           toValue: 0,
-          duration: 1000,
+          duration: 900,
           useNativeDriver: true,
         }),
       ]),
@@ -78,7 +80,7 @@ export default function CelebrationView({ title, message, onDismiss }) {
             </View>
 
             <TouchableOpacity style={styles.button} onPress={onDismiss}>
-              <Text style={styles.buttonText}>Awesome!</Text>
+              <Text style={styles.buttonText}>{t("general.awesome").toUpperCase()}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -96,10 +98,10 @@ const styles = StyleSheet.create({
   },
   card: {
     width: width - 80,
-    borderRadius: 30,
+    borderRadius: Radius.xl,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.5)",
+    borderWidth: 1.5,
+    borderColor: Colors.accentBorder,
   },
   cardInner: {
     paddingVertical: 40,
@@ -115,27 +117,31 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "900",
+    fontFamily: Typography.fontDisplay,
+    fontSize: Typography.xxl,
     textAlign: "center",
     color: Colors.textPrimary,
+    letterSpacing: Typography.tight,
   },
   message: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
     color: Colors.textSecondary,
     textAlign: "center",
+    lineHeight: 22,
   },
   button: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.full,
-    height: 50,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.sm,
+    height: 52,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
   },
   buttonText: {
+    fontFamily: Typography.fontLabel,
     color: Colors.textInverse,
-    fontSize: Typography.base,
-    fontWeight: "700",
+    fontSize: Typography.xs,
+    letterSpacing: Typography.widest,
   },
 });

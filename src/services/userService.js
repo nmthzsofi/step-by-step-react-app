@@ -36,7 +36,6 @@ export const fetchProfile = (uid) => {
       profileImageURL: data.profileImageURL ?? "",
       hasCompletedOnboarding: data.hasCompletedOnboarding ?? false,
       birthDate: data.birthDate?.toDate?.() ?? null,
-      isEmailVerified: data.emailVerified ?? false,
       currentUserProfile: {
         id: uid,
         firstName: data.firstName ?? "",
@@ -107,7 +106,7 @@ export const saveProfileImage = async (uid, imageUri) => {
 
   useAuthStore.getState().setProfile({ profileImageURL: imageUri });
 
-  const storageRef = ref(storage, `profile_images/${uid}.jpg`);
+  const storageRef = ref(storage, `profile_images/${uid}`);
   await uploadBytes(storageRef, blob);
   const downloadURL = await getDownloadURL(storageRef);
 

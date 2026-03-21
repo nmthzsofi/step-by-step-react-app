@@ -5,15 +5,16 @@ import {
   getDoc,
   getDocs,
   updateDoc,
+  increment,
   query,
   where,
   onSnapshot,
-  arrayContains,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { useGoalStore } from "../store/goalStore";
 import { useAuthStore } from "../store/authStore";
 import { generateShareCode } from "../utils/formatters";
+import i18n from "../../i18n/i18n";
 
 const goalListeners = {};
 
@@ -87,10 +88,10 @@ export const addSteps = async (steps, userUID) => {
       updatedMembers[memberIndex].hasFinished = true;
       if (!goal.hasShownCelebration) {
         triggerCelebration(
-          goal.type === "race" ? "Champion! 🏆" : "Goal Reached! 🎉",
+          goal.type === "race" ? i18n.t("progress.champion") : i18n.t("progress.goal_reached"),
           goal.type === "race"
-            ? `You crossed the finish line first in ${goal.name}!`
-            : `Congratulations! You've completed the ${goal.name} journey.`,
+            ? i18n.t("progress.race_win", { name: goal.name })
+            : i18n.t("progress.congratulations_journey", { name: goal.name }),
         );
       }
     }
@@ -197,6 +198,10 @@ export const joinGoal = async (code, userProfile) => {
   await updateDoc(doc(db, "goals", goal.id), {
     members: updatedMembers,
     memberUIDs,
+  });
+
+  await updateDoc(doc(db, "users", userProfile.id), {
+    joinedGroupCount: increment(1),
   });
 
   const newGoal = { ...goal, members: updatedMembers, memberUIDs };

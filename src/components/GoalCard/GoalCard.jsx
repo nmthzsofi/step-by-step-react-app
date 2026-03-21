@@ -1,4 +1,6 @@
+import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
 import { formatProgress } from "../../utils/formatters";
 import {
@@ -9,9 +11,8 @@ import {
   Shadows,
 } from "../../constants/theme";
 
-const rankColors = ["#FFD700", "#A0A0A0", "#CD7F32"];
-
 export default function GoalCard({ goal, isSelected }) {
+  const { t } = useTranslation();
   const { displayUnit } = useAuthStore();
 
   const progress =
@@ -19,7 +20,7 @@ export default function GoalCard({ goal, isSelected }) {
 
   const remainingSteps = Math.max(0, goal.totalSteps - goal.currentSteps);
   const isComplete = remainingSteps === 0 && goal.totalSteps > 0;
-  const themeColor = goal.isFullyCompleted ? Colors.success : Colors.primary;
+  const themeColor = goal.isFullyCompleted ? Colors.success : Colors.accent;
 
   const topThree = [...(goal.members ?? [])]
     .sort((a, b) => b.steps - a.steps)
@@ -34,17 +35,23 @@ export default function GoalCard({ goal, isSelected }) {
       ]}
     >
       <View style={styles.header}>
-        <View style={[styles.iconBox, { backgroundColor: `${themeColor}18` }]}>
-          <Text style={styles.icon}>
-            {goal.isFullyCompleted ? "✅" : goal.icon}
-          </Text>
+        <View style={[styles.iconBox, { backgroundColor: Colors.accentGlow }]}>
+          {goal.isFullyCompleted ? (
+            <Ionicons
+              name="checkmark-circle"
+              size={24}
+              color={Colors.success}
+            />
+          ) : (
+            <Text style={styles.icon}>{goal.icon}</Text>
+          )}
         </View>
         <View style={styles.headerText}>
           <Text style={styles.name}>{goal.name}</Text>
           <Text style={styles.remaining}>
             {isComplete
-              ? "Goal Reached!"
-              : `${formatProgress(remainingSteps, displayUnit)} remaining`}
+              ? t("progress.goal_reached_short")
+              : t("common.remaining", { time: formatProgress(remainingSteps, displayUnit) })}
           </Text>
         </View>
         <Text style={[styles.percent, { color: themeColor }]}>
@@ -66,17 +73,10 @@ export default function GoalCard({ goal, isSelected }) {
       {goal.type === "race" && topThree.length > 0 && (
         <View style={styles.leaderboard}>
           <View style={styles.divider} />
-          <Text style={styles.leaderboardTitle}>LEADERBOARD</Text>
+          <Text style={styles.leaderboardTitle}>{t("progress.leaderboard").toUpperCase()}</Text>
           {topThree.map((member, index) => (
             <View key={member.id ?? index} style={styles.leaderboardRow}>
-              <View
-                style={[
-                  styles.rankBadge,
-                  { backgroundColor: rankColors[index] ?? Colors.primary },
-                ]}
-              >
-                <Text style={styles.rankText}>{index + 1}</Text>
-              </View>
+              <Text style={styles.rankText}>#{index + 1}</Text>
               <Text style={styles.memberName}>{member.firstName}</Text>
               <Text style={styles.memberSteps}>
                 {formatProgress(member.steps, displayUnit)}
@@ -91,41 +91,47 @@ export default function GoalCard({ goal, isSelected }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.background,
-    borderRadius: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
     padding: Spacing.base,
     gap: Spacing.sm,
     ...Shadows.sm,
-    borderWidth: 2,
-    borderColor: "transparent",
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  cardSelected: { borderColor: Colors.primary },
+  cardSelected: { borderColor: Colors.accentBorder },
   cardCompleted: { borderColor: Colors.success },
   header: { flexDirection: "row", alignItems: "center", gap: Spacing.md },
   iconBox: {
     width: 50,
     height: 50,
-    borderRadius: 12,
+    borderRadius: Radius.md,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
   },
   icon: { fontSize: 22 },
   headerText: { flex: 1 },
   name: {
+    fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.base,
-    fontWeight: "700",
     color: Colors.textPrimary,
   },
   remaining: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.xs,
     color: Colors.textSecondary,
     marginTop: 2,
-    fontWeight: "500",
   },
-  percent: { fontSize: Typography.sm, fontWeight: "700" },
+  percent: {
+    fontFamily: Typography.fontDisplay,
+    fontSize: Typography.md,
+    letterSpacing: Typography.tight,
+  },
   progressTrack: {
-    height: 6,
-    backgroundColor: Colors.backgroundAlt,
+    height: 4,
+    backgroundColor: Colors.borderMid,
     borderRadius: Radius.full,
     overflow: "hidden",
   },
@@ -133,24 +139,31 @@ const styles = StyleSheet.create({
   leaderboard: { gap: Spacing.xs },
   divider: { height: 1, backgroundColor: Colors.divider },
   leaderboardTitle: {
-    fontSize: 10,
-    fontWeight: "700",
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
     color: Colors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: Typography.widest,
   },
   leaderboardRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
   },
-  rankBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
+  rankText: {
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
+    color: Colors.textAccent,
+    width: 24,
   },
-  rankText: { fontSize: 9, fontWeight: "700", color: Colors.textInverse },
-  memberName: { flex: 1, fontSize: Typography.xs, color: Colors.textPrimary },
-  memberSteps: { fontSize: 10, color: Colors.textSecondary },
+  memberName: {
+    flex: 1,
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.xs,
+    color: Colors.textPrimary,
+  },
+  memberSteps: {
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+  },
 });

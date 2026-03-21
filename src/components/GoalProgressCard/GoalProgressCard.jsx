@@ -1,4 +1,6 @@
+import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
 import { formatProgress } from "../../utils/formatters";
 import {
@@ -9,10 +11,9 @@ import {
   Shadows,
 } from "../../constants/theme";
 
-const rankColors = ["#FFD700", "#A0A0A0", "#CD7F32"];
-
 export default function GoalProgressCard({ goal }) {
-  const { firebaseUser, displayUnit, userHeight } = useAuthStore();
+  const { t } = useTranslation();
+  const { firebaseUser, displayUnit } = useAuthStore();
   const uid = firebaseUser?.uid;
 
   const personalSteps = goal.members?.find((m) => m.id === uid)?.steps ?? 0;
@@ -41,11 +42,7 @@ export default function GoalProgressCard({ goal }) {
     isMeFinished ||
     (goal.type === "cooperative" && cooperativeSteps >= goal.totalSteps);
 
-  const progressColor = goal.isFullyCompleted
-    ? Colors.success
-    : goal.type === "race"
-      ? Colors.warning
-      : Colors.primary;
+  const progressColor = goal.isFullyCompleted ? Colors.success : Colors.accent;
 
   const displaySteps =
     goal.type === "cooperative" ? cooperativeSteps : personalSteps;
@@ -58,18 +55,15 @@ export default function GoalProgressCard({ goal }) {
     <View style={[styles.card, goal.isFullyCompleted && styles.cardCompleted]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text
-          style={[
-            styles.icon,
-            { color: showCheck ? Colors.success : Colors.primary },
-          ]}
-        >
-          {showCheck ? "✅" : "🎯"}
-        </Text>
+        <Ionicons
+          name={showCheck ? "checkmark-circle" : "navigate"}
+          size={18}
+          color={showCheck ? Colors.success : Colors.accent}
+        />
         <View style={styles.headerText}>
           <Text style={styles.goalName}>{goal.name}</Text>
           {goal.type === "race" && (
-            <Text style={styles.raceTag}>Race Mode</Text>
+            <Text style={styles.raceTag}>{t("journey.race_mode").toUpperCase()}</Text>
           )}
         </View>
         <Text style={[styles.percent, { color: progressColor }]}>
@@ -90,7 +84,7 @@ export default function GoalProgressCard({ goal }) {
         />
       </View>
 
-      {/* Leaderboard — mirrors SwiftUI leaderboardPreview */}
+      {/* Leaderboard */}
       {goal.isGroupGoal && topThree.length > 0 && (
         <View style={styles.leaderboard}>
           <View style={styles.divider} />
@@ -98,14 +92,13 @@ export default function GoalProgressCard({ goal }) {
             {topThree.map((member, index) => (
               <View key={member.id ?? index} style={styles.leaderboardItem}>
                 {member.steps >= goal.totalSteps ? (
-                  <Text style={styles.checkmark}>✓</Text>
-                ) : (
-                  <View
-                    style={[
-                      styles.rankDot,
-                      { backgroundColor: rankColors[index] ?? Colors.primary },
-                    ]}
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={10}
+                    color={Colors.success}
                   />
+                ) : (
+                  <Text style={styles.rankLabel}>#{index + 1}</Text>
                 )}
                 <Text style={styles.memberName}>{member.firstName}</Text>
               </View>
@@ -118,7 +111,7 @@ export default function GoalProgressCard({ goal }) {
       <View style={styles.footer}>
         <View>
           <Text style={styles.statLabel}>
-            {goal.type === "race" ? "MY PROGRESS" : "TEAM PROGRESS"}
+            {goal.type === "cooperative" ? t("progress.team_progress").toUpperCase() : t("progress.my_progress").toUpperCase()}
           </Text>
           <Text
             style={[
@@ -130,7 +123,7 @@ export default function GoalProgressCard({ goal }) {
           </Text>
         </View>
         <View style={{ alignItems: "flex-end" }}>
-          <Text style={styles.statLabel}>TARGET</Text>
+          <Text style={styles.statLabel}>{t("progress.target").toUpperCase()}</Text>
           <Text style={styles.statValue}>
             {formatProgress(goal.totalSteps, displayUnit)}
           </Text>
@@ -142,14 +135,14 @@ export default function GoalProgressCard({ goal }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "rgba(255,255,255,0.95)",
-    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    borderRadius: Radius.lg,
     padding: Spacing.base,
     gap: Spacing.sm,
     ...Shadows.md,
   },
   cardCompleted: {
-    borderWidth: 3,
+    borderWidth: 1.5,
     borderColor: Colors.success,
   },
   header: {
@@ -157,29 +150,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.sm,
   },
-  icon: {
-    fontSize: 18,
-  },
   headerText: {
     flex: 1,
   },
   goalName: {
+    fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.base,
-    fontWeight: "700",
     color: Colors.textPrimary,
   },
   raceTag: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: Colors.warning,
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
+    color: Colors.textAccent,
+    letterSpacing: Typography.wider,
   },
   percent: {
-    fontSize: Typography.base,
-    fontWeight: "700",
+    fontFamily: Typography.fontDisplay,
+    fontSize: Typography.md,
+    letterSpacing: Typography.tight,
   },
   progressTrack: {
-    height: 6,
-    backgroundColor: Colors.backgroundAlt,
+    height: 4,
+    backgroundColor: Colors.borderMid,
     borderRadius: Radius.full,
     overflow: "hidden",
   },
@@ -204,20 +196,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.xs,
   },
-  rankDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  checkmark: {
-    fontSize: 10,
-    color: Colors.success,
-    fontWeight: "700",
+  rankLabel: {
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
+    color: Colors.textAccent,
   },
   memberName: {
-    fontSize: 10,
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.xs,
     color: Colors.textSecondary,
-    fontWeight: "500",
   },
   footer: {
     flexDirection: "row",
@@ -225,14 +212,14 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   statLabel: {
-    fontSize: 9,
-    fontWeight: "700",
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
     color: Colors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: Typography.wider,
   },
   statValue: {
+    fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.sm,
-    fontWeight: "700",
     color: Colors.textPrimary,
   },
 });

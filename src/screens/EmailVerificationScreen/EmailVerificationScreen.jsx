@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { reload, sendEmailVerification } from "firebase/auth";
+import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import { sendEmailVerification } from "firebase/auth";
 import { auth } from "../../services/firebase";
-import { useAuthStore } from "../../store/authStore";
 import {
-  fetchProfile,
-  signOut,
   checkEmailVerification,
+  signOut,
 } from "../../services/authService";
 import { Colors } from "../../constants/theme";
 import styles from "./EmailVerificationScreen.styles";
 
 export default function EmailVerificationScreen() {
+  const { t } = useTranslation();
   const [isChecking, setIsChecking] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -47,11 +48,13 @@ export default function EmailVerificationScreen() {
     <View style={styles.container}>
       <View style={styles.inner}>
         <View style={styles.centerBlock}>
-          <Text style={styles.icon}>📧</Text>
+          <View style={styles.iconWrapper}>
+            <Ionicons name="mail-outline" size={40} color={Colors.accent} />
+          </View>
           <View style={styles.textBlock}>
-            <Text style={styles.title}>Check your email</Text>
+            <Text style={styles.title}>{t("auth.check_email")}</Text>
             <Text style={styles.subtitle}>
-              {`We sent a verification link to\n${currentEmail}`}
+              {t("auth.verify_sent_to", { email: currentEmail })}
             </Text>
           </View>
           <View style={styles.actionsBlock}>
@@ -66,17 +69,17 @@ export default function EmailVerificationScreen() {
             >
               {isChecking && <ActivityIndicator color={Colors.textInverse} />}
               <Text style={styles.primaryButtonText}>
-                I've verified my email
+                {t("auth.verified_button").toUpperCase()}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.resendButton} onPress={resendEmail}>
-              <Text style={styles.resendButtonText}>Resend email</Text>
+              <Text style={styles.resendButtonText}>{t("auth.resend_email").toUpperCase()}</Text>
             </TouchableOpacity>
           </View>
           {message.length > 0 && <Text style={styles.message}>{message}</Text>}
         </View>
         <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
-          <Text style={styles.signOutText}>Sign out</Text>
+          <Text style={styles.signOutText}>{t("auth.sign_out")}</Text>
         </TouchableOpacity>
       </View>
     </View>

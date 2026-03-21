@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import {
   View,
@@ -7,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useAuthStore } from "../../store/authStore";
 import { useGoalStore } from "../../store/goalStore";
@@ -21,9 +23,10 @@ import {
   Shadows,
 } from "../../constants/theme";
 
-const INTENSITIES = ["Low", "Medium", "High"];
+const INTENSITY_KEYS = ["low", "medium", "high"];
 
 export default function AddActivityModal({ visible, onDismiss }) {
+  const { t } = useTranslation();
   const { firebaseUser, displayUnit } = useAuthStore();
   const goals = useGoalStore((s) => s.goals);
 
@@ -48,18 +51,18 @@ export default function AddActivityModal({ visible, onDismiss }) {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>New Activity</Text>
+          <Text style={styles.title}>{t("fitness.new_activity")}</Text>
           <TouchableOpacity onPress={onDismiss}>
-            <Text style={styles.cancel}>Cancel</Text>
+            <Text style={styles.cancel}>{t("general.cancel")}</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
           {/* Activity type picker */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>EXERCISE DETAILS</Text>
+            <Text style={styles.sectionTitle}>{t("fitness.exercise_details").toUpperCase()}</Text>
             <View style={styles.card}>
-              <Text style={styles.fieldLabel}>Activity</Text>
+              <Text style={styles.fieldLabel}>{t("fitness.activity")}</Text>
               <View style={styles.activityGrid}>
                 {ActivityTypes.map((a) => (
                   <TouchableOpacity
@@ -77,7 +80,7 @@ export default function AddActivityModal({ visible, onDismiss }) {
                           styles.activityChipTextActive,
                       ]}
                     >
-                      {a.label}
+                      {t(`fitness.${a.key}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -87,7 +90,7 @@ export default function AddActivityModal({ visible, onDismiss }) {
 
               {/* Duration slider */}
               <Text style={styles.fieldLabel}>
-                Duration: {Math.round(duration)} minutes
+                {t("fitness.duration_minutes", { count: Math.round(duration) })}
               </Text>
               <Slider
                 minimumValue={5}
@@ -95,20 +98,20 @@ export default function AddActivityModal({ visible, onDismiss }) {
                 step={5}
                 value={duration}
                 onValueChange={setDuration}
-                minimumTrackTintColor={Colors.primary}
+                minimumTrackTintColor={Colors.accent}
                 maximumTrackTintColor={Colors.border}
-                thumbTintColor={Colors.primary}
+                thumbTintColor={Colors.accent}
                 style={styles.slider}
               />
 
               <View style={styles.divider} />
 
               {/* Intensity segmented control */}
-              <Text style={styles.fieldLabel}>Intensity</Text>
+              <Text style={styles.fieldLabel}>{t("fitness.intensity")}</Text>
               <View style={styles.segmented}>
-                {INTENSITIES.map((label, i) => (
+                {INTENSITY_KEYS.map((key, i) => (
                   <TouchableOpacity
-                    key={label}
+                    key={key}
                     style={[
                       styles.segment,
                       intensity === i && styles.segmentActive,
@@ -121,7 +124,7 @@ export default function AddActivityModal({ visible, onDismiss }) {
                         intensity === i && styles.segmentTextActive,
                       ]}
                     >
-                      {label}
+                      {t(`fitness.${key}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -131,10 +134,10 @@ export default function AddActivityModal({ visible, onDismiss }) {
 
           {/* Estimated progress */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>ESTIMATED PROGRESS</Text>
+            <Text style={styles.sectionTitle}>{t("progress.estimated_progress").toUpperCase()}</Text>
             <View style={styles.card}>
               <View style={styles.estimateRow}>
-                <Text style={styles.footprint}>👟</Text>
+                <Ionicons name="walk" size={22} color={Colors.accent} />
                 <Text style={styles.estimateText}>
                   {formatProgress(calculatedSteps, displayUnit)}
                 </Text>
@@ -152,7 +155,7 @@ export default function AddActivityModal({ visible, onDismiss }) {
             disabled={goals.length === 0}
             activeOpacity={0.85}
           >
-            <Text style={styles.submitText}>Add Steps</Text>
+            <Text style={styles.submitText}>{t("fitness.add_steps").toUpperCase()}</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -176,13 +179,15 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.divider,
   },
   title: {
+    fontFamily: Typography.fontHeading,
     fontSize: Typography.md,
-    fontWeight: "700",
     color: Colors.textPrimary,
+    letterSpacing: Typography.tight,
   },
   cancel: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
-    color: Colors.primary,
+    color: Colors.accent,
   },
   content: {
     padding: Spacing.base,
@@ -193,24 +198,24 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   sectionTitle: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
     color: Colors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: Typography.widest,
     marginLeft: Spacing.xs,
     marginBottom: Spacing.xs,
   },
   card: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.md,
     padding: Spacing.base,
     gap: Spacing.md,
     ...Shadows.sm,
   },
   fieldLabel: {
+    fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.base,
     color: Colors.textPrimary,
-    fontWeight: "500",
   },
   activityGrid: {
     flexDirection: "row",
@@ -222,18 +227,21 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     borderRadius: Radius.full,
     backgroundColor: Colors.backgroundAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   activityChipActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.accent,
+    borderColor: Colors.accent,
   },
   activityChipText: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.sm,
     color: Colors.textSecondary,
-    fontWeight: "500",
   },
   activityChipTextActive: {
+    fontFamily: Typography.fontBodyMedium,
     color: Colors.textInverse,
-    fontWeight: "700",
   },
   slider: {
     width: "100%",
@@ -252,17 +260,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   segmentActive: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
     ...Shadows.sm,
   },
   segmentText: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.sm,
     color: Colors.textSecondary,
-    fontWeight: "500",
   },
   segmentTextActive: {
+    fontFamily: Typography.fontBodyMedium,
     color: Colors.textPrimary,
-    fontWeight: "700",
   },
   divider: {
     height: 1,
@@ -273,18 +283,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.sm,
   },
-  footprint: {
-    fontSize: 20,
-  },
   estimateText: {
-    fontSize: Typography.md,
-    fontWeight: "700",
-    color: Colors.primary,
+    fontFamily: Typography.fontDisplay,
+    fontSize: Typography.xl,
+    color: Colors.textAccent,
+    letterSpacing: Typography.tight,
   },
   submitButton: {
-    backgroundColor: Colors.textPrimary,
-    borderRadius: Radius.lg,
-    height: 55,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.sm,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
     marginTop: Spacing.sm,
@@ -293,8 +301,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.disabled,
   },
   submitText: {
-    fontSize: Typography.base,
-    fontWeight: "700",
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
     color: Colors.textInverse,
+    letterSpacing: Typography.widest,
   },
 });

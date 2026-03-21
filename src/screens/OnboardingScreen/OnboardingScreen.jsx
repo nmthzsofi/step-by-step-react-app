@@ -23,10 +23,9 @@ import {
   completeOnboarding,
 } from "../../services/userService";
 import { useAuthStore } from "../../store/authStore";
+import { useTranslation } from "react-i18next";
 import { Colors } from "../../constants/theme";
 import styles from "./OnboardingScreen.styles";
-
-const SEX_OPTIONS = ["Male", "Female", "Non-binary", "Other"];
 
 const defaultBirthDate = () => {
   const d = new Date();
@@ -35,17 +34,26 @@ const defaultBirthDate = () => {
 };
 
 export default function OnboardingScreen() {
+  const { t, i18n } = useTranslation();
   const { userName, totalStepsAllTime, hasTeamPlayerBadge } = useAuthStore();
+
+  const SEX_OPTIONS = [
+    { value: "Male", label: t("profile.male") },
+    { value: "Female", label: t("profile.female") },
+    { value: "Non-binary", label: t("profile.non_binary") },
+    { value: "Other", label: t("profile.other") },
+  ];
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [selectedSex, setSelectedSex] = useState("Other");
+  const [selectedSex, setSelectedSex] = useState("Female");
   const [birthDate, setBirthDate] = useState(defaultBirthDate());
   const [height, setHeight] = useState(170);
   const [weight, setWeight] = useState(70);
   const [imageUri, setImageUri] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showSexPicker, setShowSexPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const formIsValid = firstName.trim().length > 0 && lastName.trim().length > 0;
@@ -72,7 +80,6 @@ export default function OnboardingScreen() {
     }
 
     try {
-      // Mirror Swift: saveProfile → saveUserDetails → mark onboarding complete
       await saveProfile({ uid, firstName, steps: 0, hasFinished: false });
 
       await saveUserDetails({
@@ -91,9 +98,8 @@ export default function OnboardingScreen() {
       if (imageUri) await saveProfileImage(uid, imageUri);
 
       await completeOnboarding(uid);
-      // authStore.hasCompletedOnboarding = true → _layout.jsx routes to (tabs)
     } catch (err) {
-      setErrorMessage("Failed to save profile. Please try again.");
+      setErrorMessage(t("general.save_failed"));
       console.error("Onboarding error:", err);
     } finally {
       setIsLoading(false);
@@ -107,14 +113,14 @@ export default function OnboardingScreen() {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {/* Header & Avatar — mirrors SwiftUI PhotosPicker block */}
+      {/* Header & Avatar */}
       <View style={styles.header}>
-        <Text style={styles.title}>Create Profile</Text>
+        <Text style={styles.title}>{t("profile.create_profile")}</Text>
         <TouchableOpacity style={styles.avatarWrapper} onPress={pickImage}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.avatarImage} />
           ) : (
-            <Text style={styles.avatarPlaceholderIcon}>👤</Text>
+            <Ionicons name="person" size={44} color={Colors.textTertiary} />
           )}
         </TouchableOpacity>
       </View>
@@ -123,10 +129,10 @@ export default function OnboardingScreen() {
       <View style={styles.form}>
         {/* First Name */}
         <View style={styles.fieldRow}>
-          <Ionicons name="person" size={20} color={Colors.primary} />
+          <Ionicons name="person-outline" size={20} color={Colors.accent} />
           <TextInput
             style={styles.input}
-            placeholder="First Name"
+            placeholder={t("profile.first_name")}
             placeholderTextColor={Colors.textTertiary}
             value={firstName}
             onChangeText={setFirstName}
@@ -137,10 +143,10 @@ export default function OnboardingScreen() {
 
         {/* Last Name */}
         <View style={styles.fieldRow}>
-          <Ionicons name="person" size={20} color={Colors.primary} />
+          <Ionicons name="person-outline" size={20} color={Colors.accent} />
           <TextInput
             style={styles.input}
-            placeholder="Last Name"
+            placeholder={t("profile.last_name")}
             placeholderTextColor={Colors.textTertiary}
             value={lastName}
             onChangeText={setLastName}
@@ -149,27 +155,34 @@ export default function OnboardingScreen() {
           />
         </View>
 
-        {/* Sex Picker — mirrors SwiftUI Picker(.menu) */}
-        <View style={styles.pickerRow}>
-          <Ionicons name="people" size={20} color={Colors.primary} />
+        {/* Sex Picker */}
+        <TouchableOpacity
+          style={styles.dateCard}
+          onPress={() => { setShowSexPicker((v) => !v); setShowDatePicker(false); }}
+        >
+          <Text style={styles.pickerLabel}>
+            {t("profile.sex")}: {SEX_OPTIONS.find((o) => o.value === selectedSex)?.label}
+          </Text>
+        </TouchableOpacity>
+        {showSexPicker && (
           <Picker
             selectedValue={selectedSex}
-            onValueChange={setSelectedSex}
+            onValueChange={(val) => { setSelectedSex(val); setShowSexPicker(false); }}
             style={styles.picker}
           >
             {SEX_OPTIONS.map((opt) => (
-              <Picker.Item key={opt} label={opt} value={opt} />
+              <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
             ))}
           </Picker>
-        </View>
+        )}
 
-        {/* Birthdate — mirrors SwiftUI DatePicker */}
+        {/* Birthdate */}
         <TouchableOpacity
           style={styles.dateCard}
-          onPress={() => setShowDatePicker(true)}
+          onPress={() => { setShowDatePicker((v) => !v); setShowSexPicker(false); }}
         >
           <Text style={styles.pickerLabel}>
-            Birthdate: {birthDate.toLocaleDateString()}
+            {t("profile.birthdate")}: {birthDate.toLocaleDateString()}
           </Text>
         </TouchableOpacity>
         {showDatePicker && (
@@ -178,6 +191,7 @@ export default function OnboardingScreen() {
             mode="date"
             display={Platform.OS === "ios" ? "spinner" : "default"}
             maximumDate={new Date()}
+            locale={i18n.language}
             onChange={(_, date) => {
               setShowDatePicker(Platform.OS === "ios");
               if (date) setBirthDate(date);
@@ -185,11 +199,11 @@ export default function OnboardingScreen() {
           />
         )}
 
-        {/* Height & Weight Sliders — mirrors SwiftUI Slider blocks */}
+        {/* Height & Weight Sliders */}
         <View style={styles.sliderCard}>
           <View style={styles.sliderRow}>
             <Text style={styles.sliderLabel}>
-              Height: {Math.round(height)} cm
+              {t("fitness.height_cm", { count: Math.round(height) })}
             </Text>
             <Slider
               style={styles.slider}
@@ -198,14 +212,14 @@ export default function OnboardingScreen() {
               step={1}
               value={height}
               onValueChange={setHeight}
-              minimumTrackTintColor={Colors.primary}
+              minimumTrackTintColor={Colors.accent}
               maximumTrackTintColor={Colors.border}
-              thumbTintColor={Colors.primary}
+              thumbTintColor={Colors.accent}
             />
           </View>
           <View style={styles.sliderRow}>
             <Text style={styles.sliderLabel}>
-              Weight: {Math.round(weight)} kg
+              {t("fitness.weight_kg", { count: Math.round(weight) })}
             </Text>
             <Slider
               style={styles.slider}
@@ -214,9 +228,9 @@ export default function OnboardingScreen() {
               step={1}
               value={weight}
               onValueChange={setWeight}
-              minimumTrackTintColor={Colors.primary}
+              minimumTrackTintColor={Colors.accent}
               maximumTrackTintColor={Colors.border}
-              thumbTintColor={Colors.primary}
+              thumbTintColor={Colors.accent}
             />
           </View>
         </View>
@@ -231,7 +245,7 @@ export default function OnboardingScreen() {
       <TouchableOpacity
         style={[
           styles.primaryButton,
-          { backgroundColor: formIsValid ? Colors.primary : Colors.disabled },
+          { backgroundColor: formIsValid ? Colors.accent : Colors.disabled },
         ]}
         onPress={handleCompleteOnboarding}
         disabled={!formIsValid || isLoading}
@@ -240,7 +254,7 @@ export default function OnboardingScreen() {
         {isLoading ? (
           <ActivityIndicator color={Colors.textInverse} />
         ) : (
-          <Text style={styles.primaryButtonText}>Start Journey</Text>
+          <Text style={styles.primaryButtonText}>{t("journey.start_journey").toUpperCase()}</Text>
         )}
       </TouchableOpacity>
     </ScrollView>

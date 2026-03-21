@@ -24,7 +24,7 @@ export const useAuthStore = create((set) => ({
   currentUserProfile: null,
 
   // Setters
-  setAuthUser: (user) => set({ firebaseUser: user, isLoggedIn: !!user }),
+  setAuthUser: (user) => set({ firebaseUser: user, isLoggedIn: !!user, isEmailVerified: user?.emailVerified ?? false }),
   setProfile: (data) => set(data),
   setProfileLoaded: (val) => set({ isProfileLoaded: val }),
   resetAuth: () =>

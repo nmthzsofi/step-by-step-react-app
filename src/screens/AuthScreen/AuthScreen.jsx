@@ -10,8 +10,9 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { signIn, signUp } from "../../services/authService";
-import { Colors } from "../../constants/theme";
+import { Colors, Spacing } from "../../constants/theme";
 import styles from "./AuthScreen.styles";
 
 // ─── Sub-components ────────────────────────────────────────────────────
@@ -26,7 +27,7 @@ const FieldRow = ({
 }) => (
   <View style={styles.fieldRow}>
     <View style={styles.fieldIcon}>
-      <Ionicons name={icon} size={20} color={Colors.primary} />
+      <Ionicons name={icon} size={20} color={Colors.accent} />
     </View>
     <TextInput
       style={styles.input}
@@ -44,7 +45,9 @@ const FieldRow = ({
   </View>
 );
 
-const ConfirmPasswordRow = ({ value, onChangeText, passwordsMatch }) => (
+const ConfirmPasswordRow = ({ value, onChangeText, passwordsMatch }) => {
+  const { t } = useTranslation();
+  return (
   <View
     style={[
       styles.fieldRow,
@@ -52,11 +55,11 @@ const ConfirmPasswordRow = ({ value, onChangeText, passwordsMatch }) => (
     ]}
   >
     <View style={styles.fieldIcon}>
-      <Ionicons name="lock-closed" size={20} color={Colors.primary} />
+      <Ionicons name="lock-closed" size={20} color={Colors.accent} />
     </View>
     <TextInput
       style={styles.input}
-      placeholder="Confirm Password"
+      placeholder={t("auth.confirm_password")}
       placeholderTextColor={Colors.textTertiary}
       value={value}
       onChangeText={onChangeText}
@@ -73,11 +76,13 @@ const ConfirmPasswordRow = ({ value, onChangeText, passwordsMatch }) => (
       />
     )}
   </View>
-);
+  );
+};
 
 // ─── Main Screen ───────────────────────────────────────────────────────
 
 export default function AuthScreen() {
+  const { t } = useTranslation();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -129,41 +134,40 @@ export default function AuthScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Header — mirrors SwiftUI VStack(spacing: 10) header block */}
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.icon}>🚶</Text>
+          <Ionicons name="walk" size={28} color={Colors.accent} style={{ marginBottom: Spacing.xs }} />
           <Text style={styles.title}>
-            {isSignUp ? "Create Account" : "Welcome Back"}
+            {isSignUp ? t("auth.create_account") : t("auth.welcome_back")}
           </Text>
+          <View style={styles.accentLine} />
           <Text style={styles.subtitle}>
-            {isSignUp
-              ? "Start your fitness journey today."
-              : "Log in to track your progress."}
+            {isSignUp ? t("auth.start_journey_subtitle") : t("auth.login_subtitle")}
           </Text>
         </View>
 
-        {/* Fields — mirrors SwiftUI VStack(spacing: 15) */}
+        {/* Fields */}
         <View style={styles.fields}>
           {isSignUp && (
             <FieldRow
               icon="at"
-              placeholder="Username"
+              placeholder={t("profile.username")}
               value={username}
               onChangeText={setUsername}
             />
           )}
 
           <FieldRow
-            icon="mail"
-            placeholder="Email"
+            icon="mail-outline"
+            placeholder={t("profile.email")}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
           />
 
           <FieldRow
-            icon="lock-closed"
-            placeholder="Password"
+            icon="lock-closed-outline"
+            placeholder={t("auth.password")}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -183,7 +187,7 @@ export default function AuthScreen() {
           <Text style={styles.errorText}>{errorMessage}</Text>
         )}
 
-        {/* Primary CTA — mirrors SwiftUI Button + .frame(height: 55) */}
+        {/* Primary CTA */}
         <TouchableOpacity
           style={[
             styles.primaryButton,
@@ -195,16 +199,14 @@ export default function AuthScreen() {
         >
           {isLoading && <ActivityIndicator color={Colors.textInverse} />}
           <Text style={styles.primaryButtonText}>
-            {isSignUp ? "Sign Up" : "Login"}
+            {isSignUp ? t("auth.signup").toUpperCase() : t("auth.login").toUpperCase()}
           </Text>
         </TouchableOpacity>
 
         {/* Toggle sign up / login */}
         <TouchableOpacity style={styles.switchButton} onPress={toggleMode}>
           <Text style={styles.switchButtonText}>
-            {isSignUp
-              ? "Already have an account? Login"
-              : "Don't have an account? Sign Up"}
+            {isSignUp ? t("auth.already_have_account") : t("auth.no_account")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

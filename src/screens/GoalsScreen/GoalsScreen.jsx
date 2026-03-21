@@ -7,14 +7,17 @@ import {
   StyleSheet,
   Modal,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useGoalStore } from "../../store/goalStore";
 import GoalCard from "../../components/GoalCard/GoalCard";
 import GoalDetailModal from "../../components/GoalDetailModal/GoalDetailModal";
 import CreateGoalModal from "../../components/CreateGoalModal/CreateGoalModal";
 import JoinGroupModal from "../../components/JoinGroupModal/JoinGroupModal";
-import { Colors, Typography, Spacing } from "../../constants/theme";
+import { useTranslation } from "react-i18next";
+import { Colors, Typography, Spacing, Radius } from "../../constants/theme";
 
 export default function GoalsScreen() {
+  const { t } = useTranslation();
   const goals = useGoalStore((s) => s.goals);
 
   const [selectedGoal, setSelectedGoal] = useState(null);
@@ -32,12 +35,12 @@ export default function GoalsScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Your Goals</Text>
+        <Text style={styles.title}>{t("progress.your_goals")}</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowActionSheet(true)}
         >
-          <Text style={styles.addIcon}>＋</Text>
+          <Ionicons name="add" size={22} color={Colors.accent} />
         </TouchableOpacity>
       </View>
 
@@ -48,10 +51,10 @@ export default function GoalsScreen() {
       >
         {goals.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🗺️</Text>
-            <Text style={styles.emptyTitle}>No journeys yet</Text>
+            <Ionicons name="map-outline" size={56} color={Colors.textTertiary} />
+            <Text style={styles.emptyTitle}>{t("journey.no_journeys_title")}</Text>
             <Text style={styles.emptySubtitle}>
-              Create a new journey or join an existing group to get started.
+              {t("journey.no_journeys_subtitle")}
             </Text>
           </View>
         ) : (
@@ -80,6 +83,7 @@ export default function GoalsScreen() {
           onPress={() => setShowActionSheet(false)}
         >
           <View style={styles.actionSheet}>
+            <View style={styles.actionHandle} />
             <TouchableOpacity
               style={styles.actionRow}
               onPress={() => {
@@ -87,8 +91,8 @@ export default function GoalsScreen() {
                 setShowCreate(true);
               }}
             >
-              <Text style={styles.actionIcon}>➕</Text>
-              <Text style={styles.actionText}>Create New Journey</Text>
+              <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
+              <Text style={styles.actionText}>{t("journey.create_new_journey")}</Text>
             </TouchableOpacity>
             <View style={styles.actionDivider} />
             <TouchableOpacity
@@ -98,8 +102,8 @@ export default function GoalsScreen() {
                 setShowJoin(true);
               }}
             >
-              <Text style={styles.actionIcon}>🔑</Text>
-              <Text style={styles.actionText}>Join Existing Group</Text>
+              <Ionicons name="key-outline" size={22} color={Colors.accent} />
+              <Text style={styles.actionText}>{t("journey.join_existing")}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -137,37 +141,35 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.divider,
   },
   title: {
+    fontFamily: Typography.fontDisplay,
     fontSize: Typography.xxl,
-    fontWeight: "700",
     color: Colors.textPrimary,
+    letterSpacing: Typography.tight,
   },
   addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primary,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
     alignItems: "center",
     justifyContent: "center",
   },
-  addIcon: {
-    color: Colors.textInverse,
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 22,
-  },
   list: { padding: Spacing.base, gap: Spacing.base, paddingBottom: 100 },
   emptyState: { alignItems: "center", paddingTop: 80, gap: Spacing.md },
-  emptyIcon: { fontSize: 60 },
   emptyTitle: {
+    fontFamily: Typography.fontDisplayItalic,
     fontSize: Typography.xl,
-    fontWeight: "700",
-    color: Colors.textPrimary,
+    color: Colors.textSecondary,
+    letterSpacing: Typography.tight,
   },
   emptySubtitle: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
     textAlign: "center",
     paddingHorizontal: Spacing.xl,
+    lineHeight: 20,
   },
   backdrop: {
     flex: 1,
@@ -175,10 +177,21 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   actionSheet: {
-    backgroundColor: Colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: Radius.lg,
+    borderTopRightRadius: Radius.lg,
     paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: Colors.accentBorder,
+  },
+  actionHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.borderMid,
+    alignSelf: "center",
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   actionRow: {
     flexDirection: "row",
@@ -186,11 +199,10 @@ const styles = StyleSheet.create({
     padding: Spacing.base,
     gap: Spacing.md,
   },
-  actionIcon: { fontSize: 20 },
   actionText: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
     color: Colors.textPrimary,
-    fontWeight: "500",
   },
   actionDivider: {
     height: 1,

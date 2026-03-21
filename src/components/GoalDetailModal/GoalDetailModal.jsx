@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
 import {
   View,
@@ -10,6 +11,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import debounce from "lodash.debounce";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -27,10 +29,10 @@ import {
 } from "../../constants/theme";
 
 const ICONS = ["🚶", "🏖️", "⛰️", "✈️", "🚴", "⛺"];
-const rankColors = ["#FFD700", "#A0A0A0", "#CD7F32"];
 const GOAL_TYPES = ["individual", "cooperative", "race"];
 
 export default function GoalDetailModal({ goal, visible, onDismiss }) {
+  const { t } = useTranslation();
   const { firebaseUser, displayUnit } = useAuthStore();
   const updateGoal = useGoalStore((s) => s.updateGoal);
   const setGoals = useGoalStore((s) => s.setGoals);
@@ -40,8 +42,8 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
   const [icon, setIcon] = useState(goal?.icon ?? "🚶");
   const [goalType, setGoalType] = useState(goal?.type ?? "individual");
   const [isSaving, setIsSaving] = useState(false);
-  const [startAddr, setStartAddr] = useState("Loading...");
-  const [endAddr, setEndAddr] = useState("Loading...");
+  const [startAddr, setStartAddr] = useState(null);
+  const [endAddr, setEndAddr] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [startCoord, setStartCoord] = useState(goal?.startCoordinate ?? null);
   const [endCoord, setEndCoord] = useState(goal?.coordinates ?? null);
@@ -65,15 +67,6 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
     );
   }, [goal]);
 
-  if (!goal) return null;
-
-  const uid = firebaseUser?.uid;
-  const hasMultipleMembers = (goal.members?.length ?? 0) > 1;
-  const sortedMembers = [...(goal.members ?? [])].sort(
-    (a, b) => b.steps - a.steps,
-  );
-  const displayMembers = showAll ? sortedMembers : sortedMembers.slice(0, 5);
-
   const debouncedSearch = useRef(
     debounce(async (query, setResults) => {
       if (query.length > 2) {
@@ -82,8 +75,17 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
       } else {
         setResults([]);
       }
-    }, 400)
+    }, 400),
   ).current;
+
+  if (!goal) return null;
+
+  const uid = firebaseUser?.uid;
+  const hasMultipleMembers = (goal.members?.length ?? 0) > 1;
+  const sortedMembers = [...(goal.members ?? [])].sort(
+    (a, b) => b.steps - a.steps,
+  );
+  const displayMembers = showAll ? sortedMembers : sortedMembers.slice(0, 5);
 
   const handleLocationSearch = (query) => {
     setSearchQuery(query);
@@ -137,14 +139,14 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
     const isCreator = uid === goal.creatorUID;
     const isGroupGoal = goal.isGroupGoal;
 
-    const title = isGroupGoal && !isCreator ? "Exit Group" : "Delete Journey";
+    const title = isGroupGoal && !isCreator ? t("journey.exit_group") : t("journey.delete_journey");
     const message =
       isGroupGoal && !isCreator
-        ? "You will be removed from this group. Other members keep their progress."
-        : "This will permanently delete this journey for all members.";
+        ? t("journey.exit_warning")
+        : t("journey.delete_warning");
 
     Alert.alert(title, message, [
-      { text: "Cancel", style: "cancel" },
+      { text: t("general.cancel"), style: "cancel" },
       {
         text: title,
         style: "destructive",
@@ -154,7 +156,6 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
             if (!goal.id) return;
 
             if (isGroupGoal && !isCreator) {
-              // Member leaving: remove only themselves from the goal
               const updatedMembers = (goal.members ?? []).filter(
                 (m) => m.id !== uid,
               );
@@ -167,7 +168,6 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
               });
               setGoals(goals.filter((g) => g.id !== goal.id));
             } else {
-              // Creator deleting: remove the entire document
               setGoals(goals.filter((g) => g.id !== goal.id));
               await deleteDoc(doc(db, "goals", goal.id));
             }
@@ -188,14 +188,14 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={onDismiss}>
-              <Text style={styles.cancel}>Cancel</Text>
+              <Text style={styles.cancel}>{t("general.cancel")}</Text>
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Edit Journey</Text>
+            <Text style={styles.headerTitle}>{t("journey.edit_journey")}</Text>
             <TouchableOpacity onPress={handleSave} disabled={isSaving}>
               {isSaving ? (
                 <ActivityIndicator />
               ) : (
-                <Text style={styles.done}>Done</Text>
+                <Text style={styles.done}>{t("general.done")}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -203,15 +203,15 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
           <ScrollView contentContainerStyle={styles.content}>
             {/* General */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>GENERAL</Text>
+              <Text style={styles.sectionTitle}>{t("general.general").toUpperCase()}</Text>
               <View style={styles.card}>
                 <View>
-                  <Text style={styles.fieldLabel}>Journey Name</Text>
+                  <Text style={styles.fieldLabel}>{t("journey.journey_name")}</Text>
                   <TextInput
                     style={styles.editableInput}
                     value={name}
                     onChangeText={setName}
-                    placeholder="Journey Name"
+                    placeholder={t("journey.journey_name")}
                     placeholderTextColor={Colors.textTertiary}
                     autoCorrect={false}
                   />
@@ -220,7 +220,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
                 <View style={styles.divider} />
 
                 <View>
-                  <Text style={styles.fieldLabel}>Journey Type</Text>
+                  <Text style={styles.fieldLabel}>{t("journey.journey_type")}</Text>
                   <View
                     style={[
                       styles.segmented,
@@ -243,14 +243,14 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
                             goalType === type && styles.segmentTextActive,
                           ]}
                         >
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                          {t(`journey.${type}`)}
                         </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                   {hasMultipleMembers && (
                     <Text style={styles.disabledHint}>
-                      Journey type cannot be changed once members have joined.
+                      {t("journey.journey_type_locked")}
                     </Text>
                   )}
                 </View>
@@ -259,13 +259,19 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
                   <>
                     <View style={styles.divider} />
                     <View style={styles.row}>
-                      <Text style={styles.rowLabel}>Group Code</Text>
+                      <Text style={styles.rowLabel}>{t("journey.group_code")}</Text>
                       <View style={styles.codeRow}>
                         <Text style={styles.shareCode}>{goal.shareCode}</Text>
                         <TouchableOpacity
-                          onPress={() => Clipboard.setStringAsync(goal.shareCode)}
+                          onPress={() =>
+                            Clipboard.setStringAsync(goal.shareCode)
+                          }
                         >
-                          <Text style={styles.copyIcon}>📋</Text>
+                          <Ionicons
+                            name="copy-outline"
+                            size={18}
+                            color={Colors.accent}
+                          />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -277,21 +283,11 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
             {/* Leaderboard */}
             {goal.isGroupGoal && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>LEADERBOARD</Text>
+                <Text style={styles.sectionTitle}>{t("progress.leaderboard").toUpperCase()}</Text>
                 <View style={styles.card}>
                   {displayMembers.map((member, index) => (
                     <View key={member.id ?? index} style={styles.memberRow}>
-                      <View
-                        style={[
-                          styles.rankBadge,
-                          {
-                            backgroundColor:
-                              rankColors[index] ?? Colors.primary,
-                          },
-                        ]}
-                      >
-                        <Text style={styles.rankText}>{index + 1}</Text>
-                      </View>
+                      <Text style={styles.rankText}>#{index + 1}</Text>
                       <Text
                         style={[
                           styles.memberName,
@@ -308,7 +304,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
                   {goal.members?.length > 5 && !showAll && (
                     <TouchableOpacity onPress={() => setShowAll(true)}>
                       <Text style={styles.viewAll}>
-                        View All Members ({goal.members.length})
+                        {t("progress.view_all_members", { count: goal.members.length })}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -318,7 +314,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
 
             {/* Icon */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>JOURNEY ICON</Text>
+              <Text style={styles.sectionTitle}>{t("journey.journey_icon").toUpperCase()}</Text>
               <View style={styles.card}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <View style={styles.iconRow}>
@@ -341,7 +337,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
 
             {/* Route */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>ROUTE</Text>
+              <Text style={styles.sectionTitle}>{t("journey.route").toUpperCase()}</Text>
               <View style={styles.card}>
                 <TouchableOpacity
                   onPress={() => {
@@ -349,9 +345,9 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
                     setSearchQuery(startAddr);
                   }}
                 >
-                  <Text style={styles.routeLabel}>Start Point</Text>
+                  <Text style={styles.routeLabel}>{t("journey.start_point")}</Text>
                   <Text style={[styles.routeValue, styles.editableRoute]}>
-                    {startAddr}
+                    {startAddr ?? t("general.loading")}
                   </Text>
                 </TouchableOpacity>
                 <View style={styles.divider} />
@@ -361,14 +357,14 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
                     setSearchQuery(endAddr);
                   }}
                 >
-                  <Text style={styles.routeLabel}>Destination</Text>
+                  <Text style={styles.routeLabel}>{t("journey.destination")}</Text>
                   <Text style={[styles.routeValue, styles.editableRoute]}>
-                    {endAddr}
+                    {endAddr ?? t("general.loading")}
                   </Text>
                 </TouchableOpacity>
                 <View style={styles.divider} />
                 <View style={styles.row}>
-                  <Text style={styles.rowLabel}>Total Steps</Text>
+                  <Text style={styles.rowLabel}>{t("fitness.total_steps")}</Text>
                   <Text style={styles.rowValue}>
                     {formatProgress(goal.totalSteps, displayUnit)}
                   </Text>
@@ -382,7 +378,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
               onPress={handleDelete}
             >
               <Text style={styles.deleteText}>
-                {goal.isGroupGoal ? "Exit Group" : "Delete Journey"}
+                {goal.isGroupGoal ? t("journey.exit_group") : t("journey.delete_journey")}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -404,10 +400,10 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
                 setSearchQuery("");
               }}
             >
-              <Text style={styles.cancel}>Cancel</Text>
+              <Text style={styles.cancel}>{t("general.cancel")}</Text>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>
-              {editingField === "start" ? "Set Start Point" : "Set Destination"}
+              {editingField === "start" ? t("journey.start_point") : t("journey.destination")}
             </Text>
             <View style={{ width: 60 }} />
           </View>
@@ -417,7 +413,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={handleLocationSearch}
-              placeholder="Search location..."
+              placeholder={t("journey.search_location")}
               placeholderTextColor={Colors.textTertiary}
               autoFocus
               autoCorrect={false}
@@ -457,23 +453,32 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.divider,
   },
   headerTitle: {
+    fontFamily: Typography.fontHeading,
     fontSize: Typography.md,
-    fontWeight: "700",
     color: Colors.textPrimary,
+    letterSpacing: Typography.tight,
   },
-  cancel: { fontSize: Typography.base, color: Colors.primary },
-  done: { fontSize: Typography.base, color: Colors.primary, fontWeight: "700" },
+  cancel: {
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.base,
+    color: Colors.accent,
+  },
+  done: {
+    fontFamily: Typography.fontBodyMedium,
+    fontSize: Typography.base,
+    color: Colors.accent,
+  },
   content: { padding: Spacing.base, gap: Spacing.base, paddingBottom: 40 },
   section: { gap: Spacing.xs },
   sectionTitle: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
     color: Colors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: Typography.widest,
     marginLeft: Spacing.xs,
   },
   card: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.md,
     padding: Spacing.base,
     gap: Spacing.sm,
@@ -485,15 +490,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  rowLabel: { fontSize: Typography.base, color: Colors.textPrimary },
-  rowValue: { fontSize: Typography.base, color: Colors.textSecondary },
+  rowLabel: {
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.base,
+    color: Colors.textPrimary,
+  },
+  rowValue: {
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.base,
+    color: Colors.textSecondary,
+  },
   fieldLabel: {
+    fontFamily: Typography.fontLabel,
     fontSize: Typography.xs,
     color: Colors.textSecondary,
-    fontWeight: "600",
+    letterSpacing: Typography.wider,
     marginBottom: Spacing.xs,
   },
   editableInput: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
     color: Colors.textPrimary,
     borderBottomWidth: 1,
@@ -514,57 +529,73 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm - 2,
     alignItems: "center",
   },
-  segmentActive: { backgroundColor: Colors.background, ...Shadows.sm },
+  segmentActive: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+    ...Shadows.sm,
+  },
   segmentText: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.xs,
     color: Colors.textSecondary,
-    fontWeight: "500",
   },
-  segmentTextActive: { color: Colors.textPrimary, fontWeight: "700" },
+  segmentTextActive: {
+    fontFamily: Typography.fontBodyMedium,
+    color: Colors.textPrimary,
+  },
   disabledHint: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.xs,
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   codeRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   shareCode: {
+    fontFamily: Typography.fontDisplay,
     fontSize: Typography.base,
-    fontWeight: "700",
-    fontFamily: "monospace",
-    color: Colors.primary,
+    color: Colors.textAccent,
     letterSpacing: 2,
   },
-  copyIcon: { fontSize: 16 },
   memberRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
-  rankBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  rankText: {
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
+    color: Colors.textAccent,
+    width: 28,
   },
-  rankText: { fontSize: 10, fontWeight: "700", color: Colors.textInverse },
-  memberName: { flex: 1, fontSize: Typography.base, color: Colors.textPrimary },
-  memberNameMe: { fontWeight: "700" },
-  memberSteps: { fontSize: Typography.sm, color: Colors.textSecondary },
-  viewAll: {
+  memberName: {
+    flex: 1,
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.base,
+    color: Colors.textPrimary,
+  },
+  memberNameMe: { fontFamily: Typography.fontBodyMedium },
+  memberSteps: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.sm,
-    color: Colors.primary,
-    fontWeight: "600",
+    color: Colors.textSecondary,
+  },
+  viewAll: {
+    fontFamily: Typography.fontBodyMedium,
+    fontSize: Typography.sm,
+    color: Colors.accent,
     textAlign: "center",
     paddingTop: Spacing.xs,
   },
   routeLabel: {
+    fontFamily: Typography.fontLabel,
     fontSize: Typography.xs,
     color: Colors.textSecondary,
-    fontWeight: "600",
+    letterSpacing: Typography.wider,
   },
   routeValue: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
     color: Colors.textPrimary,
     marginTop: 2,
   },
-  editableRoute: { color: Colors.primary },
+  editableRoute: { color: Colors.textAccent },
   iconRow: {
     flexDirection: "row",
     gap: Spacing.md,
@@ -574,24 +605,29 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: Radius.full,
     backgroundColor: Colors.backgroundAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   iconButtonActive: {
-    backgroundColor: `${Colors.primary}20`,
+    backgroundColor: Colors.accentGlow,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: Colors.accent,
   },
   iconEmoji: { fontSize: 24 },
   deleteButton: { alignItems: "center", padding: Spacing.base },
   deleteText: {
+    fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.base,
     color: Colors.error,
-    fontWeight: "600",
   },
   searchInput: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.base,
     color: Colors.textPrimary,
-    backgroundColor: Colors.backgroundAlt,
+    backgroundColor: Colors.surfaceHigh,
     borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
     padding: Spacing.md,
   },
   resultRow: {
@@ -601,11 +637,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   resultName: {
+    fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.base,
-    fontWeight: "600",
     color: Colors.textPrimary,
   },
   resultFull: {
+    fontFamily: Typography.fontBody,
     fontSize: Typography.xs,
     color: Colors.textSecondary,
     marginTop: 2,

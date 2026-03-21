@@ -1,3 +1,5 @@
+import i18n from "../../i18n/i18n";
+
 // Mirrors UserManager computed properties and formatting methods
 
 export const strideLength = (heightCm) => (heightCm * 0.415) / 100;
@@ -12,7 +14,7 @@ export const formatProgress = (steps, displayUnit, heightCm) => {
     const km = steps * 0.000762;
     return `${km.toFixed(2)} km`;
   }
-  return `${steps.toLocaleString()} steps`;
+  return `${steps.toLocaleString()} ${i18n.t("fitness.steps")}`;
 };
 
 export const calculateAge = (birthDate) => {

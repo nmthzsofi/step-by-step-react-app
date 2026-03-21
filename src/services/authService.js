@@ -18,7 +18,8 @@ import { auth, db } from "./firebase";
 import { useAuthStore } from "../store/authStore";
 import { useGoalStore } from "../store/goalStore";
 import { fetchProfile } from "./userService";
-import { fetchAllGoals } from "./goalService";
+import { fetchAllGoals, clearGoalListeners } from "./goalService";
+import i18n from "../../i18n/i18n";
 
 // ─── Auth State Listener ───────────────────────────────────────────────
 export const initAuthListener = (onReady) => {
@@ -39,17 +40,16 @@ export const initAuthListener = (onReady) => {
     }
 
     const freshUser = auth.currentUser;
+    useAuthStore.getState().setAuthUser(freshUser);
 
-    if (!freshUser?.emailVerified) {
-      await firebaseSignOut(auth);
-      useAuthStore.getState().resetAuth();
-      onReady?.();
-      return;
+    if (freshUser?.emailVerified) {
+      await setDoc(doc(db, "users", freshUser.uid), { emailVerified: true }, { merge: true });
+      fetchProfile(freshUser.uid);
+      fetchAllGoals(freshUser.uid);
+    } else {
+      useAuthStore.getState().setProfileLoaded(true);
     }
 
-    useAuthStore.getState().setAuthUser(freshUser);
-    fetchProfile(freshUser.uid);
-    fetchAllGoals(freshUser.uid);
     onReady?.();
   });
 };
@@ -60,7 +60,7 @@ export const signUp = async ({ email, password, username }) => {
 
   const available = await isUsernameAvailable(cleanUsername);
   if (!available)
-    throw new Error(`Username '@${cleanUsername}' is already taken.`);
+    throw new Error(i18n.t("profile.username_taken", { name: cleanUsername }));
 
   const result = await createUserWithEmailAndPassword(auth, email, password);
   const uid = result.user.uid;
@@ -87,15 +87,13 @@ export const signIn = async ({ email, password }) => {
 
   if (!result.user.emailVerified) {
     await sendEmailVerification(result.user);
-    await firebaseSignOut(auth);
-    throw new Error(
-      "Please verify your email before logging in. We've resent the verification link.",
-    );
+    // Do not sign out or throw — initAuthListener will route to /email-verification
   }
 };
 
 // ─── Sign Out ──────────────────────────────────────────────────────────
 export const signOut = async () => {
+  clearGoalListeners();
   await firebaseSignOut(auth);
 };
 
