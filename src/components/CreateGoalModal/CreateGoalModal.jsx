@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,13 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
-  Clipboard,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import debounce from "lodash.debounce";
 import { useAuthStore } from "../../store/authStore";
 import { saveGoal } from "../../services/goalService";
-import {
-  searchLocations,
-  calculateSteps,
-  generateShareCode,
-} from "../../utils/location";
+import { searchLocations, calculateSteps } from "../../utils/location";
+import { generateShareCode } from "../../utils/formatters";
 import {
   Colors,
   Typography,
@@ -51,6 +49,17 @@ export default function CreateGoalModal({ visible, onDismiss }) {
   const [activeField, setActiveField] = useState("to");
   const [isCreating, setIsCreating] = useState(false);
 
+  const debouncedSearch = useRef(
+    debounce(async (query, setResults) => {
+      if (query.length > 2) {
+        const results = await searchLocations(query);
+        setResults(results);
+      } else {
+        setResults([]);
+      }
+    }, 400)
+  ).current;
+
   const estimatedSteps =
     fromCoord && toCoord
       ? calculateSteps(fromCoord ?? DEFAULT_START, toCoord)
@@ -66,17 +75,11 @@ export default function CreateGoalModal({ visible, onDismiss }) {
     }
   }, [selectedType]);
 
-  const handleSearch = async (query, field) => {
+  const handleSearch = (query, field) => {
     setActiveField(field);
     if (field === "from") setFromText(query);
     else setToText(query);
-
-    if (query.length > 2) {
-      const results = await searchLocations(query);
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
+    debouncedSearch(query, setSearchResults);
   };
 
   const selectLocation = (item) => {
@@ -265,7 +268,7 @@ export default function CreateGoalModal({ visible, onDismiss }) {
                     <Text style={styles.shareCode}>{shareCode}</Text>
                     <TouchableOpacity
                       style={styles.copyButton}
-                      onPress={() => Clipboard.setString(shareCode)}
+                      onPress={() => Clipboard.setStringAsync(shareCode)}
                     >
                       <Text style={styles.copyButtonText}>Copy</Text>
                     </TouchableOpacity>

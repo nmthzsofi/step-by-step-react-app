@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,9 +8,10 @@ import {
   ScrollView,
   ActivityIndicator,
   StyleSheet,
-  Clipboard,
   Alert,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import debounce from "lodash.debounce";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { useAuthStore } from "../../store/authStore";
@@ -73,14 +74,20 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
   );
   const displayMembers = showAll ? sortedMembers : sortedMembers.slice(0, 5);
 
-  const handleLocationSearch = async (query) => {
+  const debouncedSearch = useRef(
+    debounce(async (query, setResults) => {
+      if (query.length > 2) {
+        const results = await searchLocations(query);
+        setResults(results);
+      } else {
+        setResults([]);
+      }
+    }, 400)
+  ).current;
+
+  const handleLocationSearch = (query) => {
     setSearchQuery(query);
-    if (query.length > 2) {
-      const results = await searchLocations(query);
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
+    debouncedSearch(query, setSearchResults);
   };
 
   const selectLocation = (item) => {
@@ -127,26 +134,47 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      goal.isGroupGoal ? "Exit Group" : "Delete Journey",
-      goal.isGroupGoal
-        ? "You will lose your progress in this group."
-        : "This will permanently delete this journey.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: goal.isGroupGoal ? "Exit Group" : "Delete Journey",
-          style: "destructive",
-          onPress: async () => {
-            onDismiss();
-            setTimeout(async () => {
+    const isCreator = uid === goal.creatorUID;
+    const isGroupGoal = goal.isGroupGoal;
+
+    const title = isGroupGoal && !isCreator ? "Exit Group" : "Delete Journey";
+    const message =
+      isGroupGoal && !isCreator
+        ? "You will be removed from this group. Other members keep their progress."
+        : "This will permanently delete this journey for all members.";
+
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: title,
+        style: "destructive",
+        onPress: async () => {
+          onDismiss();
+          setTimeout(async () => {
+            if (!goal.id) return;
+
+            if (isGroupGoal && !isCreator) {
+              // Member leaving: remove only themselves from the goal
+              const updatedMembers = (goal.members ?? []).filter(
+                (m) => m.id !== uid,
+              );
+              const updatedMemberUIDs = updatedMembers
+                .map((m) => m.id)
+                .filter(Boolean);
+              await updateDoc(doc(db, "goals", goal.id), {
+                members: updatedMembers,
+                memberUIDs: updatedMemberUIDs,
+              });
               setGoals(goals.filter((g) => g.id !== goal.id));
-              if (goal.id) await deleteDoc(doc(db, "goals", goal.id));
-            }, 300);
-          },
+            } else {
+              // Creator deleting: remove the entire document
+              setGoals(goals.filter((g) => g.id !== goal.id));
+              await deleteDoc(doc(db, "goals", goal.id));
+            }
+          }, 300);
         },
-      ],
-    );
+      },
+    ]);
   };
 
   return (
@@ -235,7 +263,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
                       <View style={styles.codeRow}>
                         <Text style={styles.shareCode}>{goal.shareCode}</Text>
                         <TouchableOpacity
-                          onPress={() => Clipboard.setString(goal.shareCode)}
+                          onPress={() => Clipboard.setStringAsync(goal.shareCode)}
                         >
                           <Text style={styles.copyIcon}>📋</Text>
                         </TouchableOpacity>

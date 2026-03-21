@@ -19,7 +19,7 @@ export const reverseGeocode = async (latitude, longitude) => {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-      { headers: { "Accept-Language": "en" } },
+      { headers: { "Accept-Language": "en", "User-Agent": "lepesrol-lepesre-app" } },
     );
     const data = await res.json();
     const city =
@@ -37,7 +37,7 @@ export const searchLocations = async (query) => {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5`,
-      { headers: { "Accept-Language": "en" } },
+      { headers: { "Accept-Language": "en", "User-Agent": "lepesrol-lepesre-app" } },
     );
     const data = await res.json();
     return data.map((item) => ({
@@ -51,10 +51,3 @@ export const searchLocations = async (query) => {
   }
 };
 
-export const generateShareCode = () => {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from(
-    { length: 6 },
-    () => chars[Math.floor(Math.random() * chars.length)],
-  ).join("");
-};

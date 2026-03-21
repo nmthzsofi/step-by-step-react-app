@@ -102,7 +102,12 @@ export const addSteps = async (steps, userUID) => {
       hasShownCelebration: true,
     });
 
-    await updateStepsInFirebase(goal.id, userUID, steps);
+    try {
+      await updateStepsInFirebase(goal.id, userUID, steps);
+    } catch {
+      // Revert optimistic update on write failure
+      updateGoal(goal.id, { members: goal.members, isFullyCompleted: goal.isFullyCompleted });
+    }
   }
 };
 
@@ -156,6 +161,7 @@ export const saveGoal = async (goal) => {
     hasShownCelebration: goal.hasShownCelebration ?? false,
     members: goal.members,
     memberUIDs,
+    creatorUID: goal.members[0]?.id ?? null,
   };
 
   const ref = await addDoc(collection(db, "goals"), goalData);

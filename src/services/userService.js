@@ -95,10 +95,17 @@ export const saveUserDetails = async ({
 
 // ─── Save Profile Image ────────────────────────────────────────────────
 export const saveProfileImage = async (uid, imageUri) => {
-  useAuthStore.getState().setProfile({ profileImageURL: imageUri });
-
   const response = await fetch(imageUri);
   const blob = await response.blob();
+
+  if (!blob.type.startsWith("image/")) {
+    throw new Error("Only image files are allowed.");
+  }
+  if (blob.size > 5 * 1024 * 1024) {
+    throw new Error("Image must be smaller than 5 MB.");
+  }
+
+  useAuthStore.getState().setProfile({ profileImageURL: imageUri });
 
   const storageRef = ref(storage, `profile_images/${uid}.jpg`);
   await uploadBytes(storageRef, blob);
