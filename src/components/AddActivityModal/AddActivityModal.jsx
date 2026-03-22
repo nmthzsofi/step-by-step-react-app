@@ -33,13 +33,20 @@ export default function AddActivityModal({ visible, onDismiss }) {
   const [selectedActivity, setSelectedActivity] = useState("running");
   const [duration, setDuration] = useState(30);
   const [intensity, setIntensity] = useState(1);
+  const [dailyLimitReached, setDailyLimitReached] = useState(false);
 
   const calculatedSteps = calculateSteps(selectedActivity, duration, intensity);
 
   const handleAdd = async () => {
     if (!firebaseUser?.uid || goals.length === 0) return;
-    await addSteps(calculatedSteps, firebaseUser.uid);
-    onDismiss();
+    try {
+      await addSteps(calculatedSteps, firebaseUser.uid);
+      onDismiss();
+    } catch (err) {
+      if (err?.code === "permission-denied") {
+        setDailyLimitReached(true);
+      }
+    }
   };
 
   return (
@@ -149,13 +156,17 @@ export default function AddActivityModal({ visible, onDismiss }) {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              goals.length === 0 && styles.submitButtonDisabled,
+              (goals.length === 0 || dailyLimitReached) && styles.submitButtonDisabled,
             ]}
             onPress={handleAdd}
-            disabled={goals.length === 0}
+            disabled={goals.length === 0 || dailyLimitReached}
             activeOpacity={0.85}
           >
-            <Text style={styles.submitText}>{t("fitness.add_steps").toUpperCase()}</Text>
+            <Text style={styles.submitText}>
+              {dailyLimitReached
+                ? t("fitness.daily_limit_reached").toUpperCase()
+                : t("fitness.add_steps").toUpperCase()}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </View>

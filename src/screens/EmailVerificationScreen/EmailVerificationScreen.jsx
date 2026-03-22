@@ -57,6 +57,11 @@ export default function EmailVerificationScreen() {
               {t("auth.verify_sent_to", { email: currentEmail })}
             </Text>
           </View>
+          <View style={styles.spamBanner}>
+            <Ionicons name="warning-outline" size={18} color={Colors.warning} />
+            <Text style={styles.spamBannerText}>{t("auth.check_spam")}</Text>
+          </View>
+
           <View style={styles.actionsBlock}>
             <TouchableOpacity
               style={[

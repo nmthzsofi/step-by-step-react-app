@@ -82,6 +82,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
 
   const uid = firebaseUser?.uid;
   const isCreator = uid === goal.creatorUID;
+  const isExitDisabled = goal.isFullyCompleted && goal.isGroupGoal && !isCreator;
   const hasMultipleMembers = (goal.members?.length ?? 0) > 1;
   const sortedMembers = [...(goal.members ?? [])].sort(
     (a, b) => b.steps - a.steps,
@@ -108,7 +109,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
   };
 
   const handleSave = async () => {
-    if (!goal.id || !isCreator) return;
+    if (!goal.id || !isCreator || goal.isFullyCompleted) return;
     setIsSaving(true);
     try {
       const isGroupGoal = goalType !== "individual";
@@ -156,16 +157,18 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
             if (!goal.id) return;
 
             if (isGroupGoal && !isCreator) {
-              const updatedMembers = (goal.members ?? []).filter(
-                (m) => m.id !== uid,
-              );
-              const updatedMemberUIDs = updatedMembers
-                .map((m) => m.id)
-                .filter(Boolean);
-              await updateDoc(doc(db, "goals", goal.id), {
-                members: updatedMembers,
-                memberUIDs: updatedMemberUIDs,
-              });
+              if (!goal.isFullyCompleted) {
+                const updatedMembers = (goal.members ?? []).filter(
+                  (m) => m.id !== uid,
+                );
+                const updatedMemberUIDs = updatedMembers
+                  .map((m) => m.id)
+                  .filter(Boolean);
+                await updateDoc(doc(db, "goals", goal.id), {
+                  members: updatedMembers,
+                  memberUIDs: updatedMemberUIDs,
+                });
+              }
               setGoals(goals.filter((g) => g.id !== goal.id));
             } else {
               setGoals(goals.filter((g) => g.id !== goal.id));
@@ -374,11 +377,12 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
 
             {/* Delete */}
             <TouchableOpacity
-              style={styles.deleteButton}
+              style={[styles.deleteButton, isExitDisabled && styles.deleteButtonDisabled]}
               onPress={handleDelete}
+              disabled={isExitDisabled}
             >
               <Text style={styles.deleteText}>
-                {goal.isGroupGoal ? t("journey.exit_group") : t("journey.delete_journey")}
+                {goal.isGroupGoal && !isCreator ? t("journey.exit_group") : t("journey.delete_journey")}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -618,6 +622,7 @@ const styles = StyleSheet.create({
   },
   iconEmoji: { fontSize: 24 },
   deleteButton: { alignItems: "center", padding: Spacing.base },
+  deleteButtonDisabled: { opacity: 0.35 },
   deleteText: {
     fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.base,

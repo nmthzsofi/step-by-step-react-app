@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { signIn, signUp } from "../../services/authService";
+import { signIn, signUp, resetPassword } from "../../services/authService";
 import { Colors, Spacing } from "../../constants/theme";
 import styles from "./AuthScreen.styles";
 
@@ -90,6 +90,7 @@ export default function AuthScreen() {
   const [username, setUsername] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const passwordsMatch = password.length > 0 && password === confirmPassword;
 
@@ -118,10 +119,23 @@ export default function AuthScreen() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setErrorMessage(t("auth.forgot_password_email_required"));
+      return;
+    }
+    setIsLoading(true);
+    setErrorMessage("");
+    await resetPassword(email.trim());
+    setResetSent(true);
+    setIsLoading(false);
+  };
+
   const toggleMode = () => {
     setIsSignUp((prev) => !prev);
     setErrorMessage("");
     setConfirmPassword("");
+    setResetSent(false);
   };
 
   return (
@@ -181,6 +195,18 @@ export default function AuthScreen() {
             />
           )}
         </View>
+
+        {/* Forgot password */}
+        {!isSignUp && (
+          <TouchableOpacity style={styles.forgotButton} onPress={handleForgotPassword}>
+            <Text style={styles.forgotButtonText}>{t("auth.forgot_password")}</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Reset email sent confirmation */}
+        {resetSent && (
+          <Text style={styles.resetSentText}>{t("auth.reset_sent")}</Text>
+        )}
 
         {/* Error message */}
         {errorMessage.length > 0 && (

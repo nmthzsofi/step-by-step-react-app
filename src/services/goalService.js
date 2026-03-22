@@ -59,6 +59,27 @@ export const listenToGoal = (goalId) => {
         break;
     }
 
+    // Deliver pending celebration for coop members who were offline when goal completed
+    const uid = auth.currentUser?.uid;
+    if (uid && updatedGoal.type === "cooperative" && updatedGoal.isFullyCompleted) {
+      const myIndex = (updatedGoal.members ?? []).findIndex((m) => m.id === uid);
+      if (myIndex !== -1 && updatedGoal.members[myIndex].celebrationPending) {
+        useGoalStore.getState().triggerCelebration(
+          i18n.t("progress.goal_reached"),
+          i18n.t("progress.congratulations_journey", { name: updatedGoal.name }),
+        );
+        const clearedMembers = updatedGoal.members.map((m, i) =>
+          i === myIndex ? { ...m, celebrationPending: false } : m,
+        );
+        updatedGoal.members = clearedMembers;
+        try {
+          updateDoc(doc(db, "goals", goalId), { members: clearedMembers });
+        } catch {
+          // Completed goal write rejected by rules — celebration was already shown
+        }
+      }
+    }
+
     useGoalStore.getState().updateGoal(goalId, updatedGoal);
   });
 };
@@ -82,22 +103,45 @@ export const addSteps = async (steps, userUID) => {
       steps: oldSteps + steps,
     };
 
-    if (
-      oldSteps < goal.totalSteps &&
-      updatedMembers[memberIndex].steps >= goal.totalSteps
-    ) {
-      updatedMembers[memberIndex].hasFinished = true;
-      if (!goal.hasShownCelebration) {
-        triggerCelebration(
-          goal.type === "race" ? i18n.t("progress.champion") : i18n.t("progress.goal_reached"),
-          goal.type === "race"
-            ? i18n.t("progress.race_win", { name: goal.name })
-            : i18n.t("progress.congratulations_journey", { name: goal.name }),
-        );
+    if (goal.type === "cooperative") {
+      const oldTotal = (goal.members ?? []).reduce((s, m) => s + m.steps, 0);
+      const newTotal = updatedMembers.reduce((s, m) => s + m.steps, 0);
+      if (oldTotal < goal.totalSteps && newTotal >= goal.totalSteps) {
+        updatedMembers.forEach((_, i) => { updatedMembers[i].hasFinished = true; });
+        if (!goal.hasShownCelebration) {
+          triggerCelebration(
+            i18n.t("progress.goal_reached"),
+            i18n.t("progress.congratulations_journey", { name: goal.name }),
+          );
+        }
+      }
+    } else {
+      if (
+        oldSteps < goal.totalSteps &&
+        updatedMembers[memberIndex].steps >= goal.totalSteps
+      ) {
+        updatedMembers[memberIndex].hasFinished = true;
+        if (goal.type === "race") {
+          // Count members already finished before this one to determine place
+          const position = (goal.members ?? []).filter((m) => m.hasFinished).length + 1;
+          triggerCelebration(
+            position === 1 ? i18n.t("progress.champion") : i18n.t("progress.goal_reached"),
+            position === 1
+              ? i18n.t("progress.race_win", { name: goal.name })
+              : i18n.t("progress.race_finish", { position, name: goal.name }),
+          );
+        } else if (!goal.hasShownCelebration) {
+          triggerCelebration(
+            i18n.t("progress.goal_reached"),
+            i18n.t("progress.congratulations_journey", { name: goal.name }),
+          );
+        }
       }
     }
 
-    const allFinished = updatedMembers.every((m) => m.steps >= goal.totalSteps);
+    const allFinished = goal.type === "cooperative"
+      ? updatedMembers.reduce((s, m) => s + m.steps, 0) >= goal.totalSteps
+      : updatedMembers.every((m) => m.steps >= goal.totalSteps);
     updateGoal(goal.id, {
       members: updatedMembers,
       isFullyCompleted: allFinished,
@@ -106,9 +150,10 @@ export const addSteps = async (steps, userUID) => {
 
     try {
       await updateStepsInFirebase(goal.id, userUID, steps);
-    } catch {
+    } catch (err) {
       // Revert optimistic update on write failure
       updateGoal(goal.id, { members: goal.members, isFullyCompleted: goal.isFullyCompleted });
+      throw err;
     }
   }
 };
@@ -120,6 +165,8 @@ const updateStepsInFirebase = async (goalId, memberUID, newSteps) => {
   if (!snapshot.exists()) return;
 
   const goal = { id: snapshot.id, ...snapshot.data() };
+  if (goal.isFullyCompleted) return;
+
   const updatedMembers = [...goal.members];
   const memberIndex = updatedMembers.findIndex((m) => m.id === memberUID);
   if (memberIndex === -1) return;
@@ -129,8 +176,25 @@ const updateStepsInFirebase = async (goalId, memberUID, newSteps) => {
     steps: updatedMembers[memberIndex].steps + newSteps,
   };
 
-  const allFinished = updatedMembers.every((m) => m.steps >= goal.totalSteps);
-  if (allFinished) updatedMembers[memberIndex].hasFinished = true;
+  const allFinished = goal.type === "cooperative"
+    ? updatedMembers.reduce((s, m) => s + m.steps, 0) >= goal.totalSteps
+    : updatedMembers.every((m) => m.steps >= goal.totalSteps);
+
+  if (allFinished) {
+    if (goal.type === "cooperative") {
+      updatedMembers.forEach((m, i) => {
+        updatedMembers[i] = {
+          ...updatedMembers[i],
+          hasFinished: true,
+          // Members other than the one who triggered completion were potentially offline —
+          // mark their celebration as pending so they see it on next app open.
+          celebrationPending: updatedMembers[i].id !== memberUID,
+        };
+      });
+    } else {
+      updatedMembers[memberIndex].hasFinished = true;
+    }
+  }
 
   const payload = { members: updatedMembers };
   if (allFinished) payload.isFullyCompleted = true;

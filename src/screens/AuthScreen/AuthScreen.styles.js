@@ -100,4 +100,21 @@ export default StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.textSecondary,
   },
+  forgotButton: {
+    alignSelf: "flex-end",
+    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.base,
+  },
+  forgotButtonText: {
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.sm,
+    color: Colors.accent,
+  },
+  resetSentText: {
+    fontFamily: Typography.fontBody,
+    fontSize: Typography.xs,
+    color: Colors.success,
+    marginBottom: Spacing.base,
+    letterSpacing: Typography.wide,
+  },
 });

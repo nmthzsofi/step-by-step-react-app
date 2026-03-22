@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import {
@@ -37,7 +38,6 @@ export default function SettingsModal({ visible, onDismiss }) {
     { value: "Other", label: t("profile.other") },
   ];
 
-  const [userName, setUserName] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [sex, setSex] = useState("Other");
@@ -51,7 +51,6 @@ export default function SettingsModal({ visible, onDismiss }) {
 
   useEffect(() => {
     if (!visible) return;
-    setUserName(store.userName);
     setFirstName(store.firstName);
     setLastName(store.lastName);
     setSex(store.sex);
@@ -71,7 +70,7 @@ export default function SettingsModal({ visible, onDismiss }) {
     try {
       await saveUserDetails({
         uid,
-        userName,
+        userName: store.userName,
         firstName,
         lastName,
         sex,
@@ -116,15 +115,10 @@ export default function SettingsModal({ visible, onDismiss }) {
                 <Text style={styles.fieldLabel}>{t("profile.username")}</Text>
                 <View style={styles.fieldRight}>
                   <Text style={styles.atSign}>@</Text>
-                  <TextInput
-                    style={styles.fieldInput}
-                    value={userName}
-                    onChangeText={setUserName}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    placeholder={t("profile.username_lowercase")}
-                    placeholderTextColor={Colors.textTertiary}
-                  />
+                  <Text style={[styles.fieldInput, { color: Colors.textTertiary }]}>
+                    {store.userName}
+                  </Text>
+                  <Ionicons name="lock-closed" size={13} color={Colors.textTertiary} style={{ marginLeft: 6 }} />
                 </View>
               </View>
               <View style={styles.divider} />

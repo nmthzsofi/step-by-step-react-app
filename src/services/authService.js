@@ -5,6 +5,7 @@ import {
   onAuthStateChanged,
   reload,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import {
   doc,
@@ -129,4 +130,15 @@ export const checkEmailVerification = async () => {
 // ─── Resend Verification Email ─────────────────────────────────────────
 export const resendVerificationEmail = async () => {
   await sendEmailVerification(auth.currentUser);
+};
+
+// ─── Password Reset ────────────────────────────────────────────────────
+// Always resolves — never reveals whether the email exists.
+// A randomised delay (1000–2500 ms) normalises response time so attackers
+// cannot distinguish a found vs. not-found email via timing.
+export const resetPassword = async (email) => {
+  const jitter = 1000 + Math.random() * 1500;
+  const delayPromise = new Promise((resolve) => setTimeout(resolve, jitter));
+  const firebasePromise = sendPasswordResetEmail(auth, email).catch(() => {});
+  await Promise.all([firebasePromise, delayPromise]);
 };

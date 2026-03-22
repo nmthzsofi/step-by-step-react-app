@@ -81,12 +81,12 @@ export default function JoinGroupModal({ visible, onDismiss }) {
           <TextInput
             style={styles.codeInput}
             value={code}
-            onChangeText={(val) => setCode(val.toUpperCase().slice(0, 6))}
+            onChangeText={(val) => setCode(val.toUpperCase().slice(0, 8))}
             placeholder={t("journey.group_code_hint")}
             placeholderTextColor={Colors.textTertiary}
             autoCapitalize="characters"
             autoCorrect={false}
-            maxLength={6}
+            maxLength={8}
           />
 
           {errorMessage.length > 0 && (
@@ -96,10 +96,10 @@ export default function JoinGroupModal({ visible, onDismiss }) {
           <TouchableOpacity
             style={[
               styles.joinButton,
-              (code.length < 6 || isSearching) && styles.joinButtonDisabled,
+              (code.length < 8 || isSearching) && styles.joinButtonDisabled,
             ]}
             onPress={handleJoin}
-            disabled={code.length < 6 || isSearching}
+            disabled={code.length < 8 || isSearching}
             activeOpacity={0.85}
           >
             {isSearching ? (

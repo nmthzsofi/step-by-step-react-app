@@ -29,7 +29,11 @@
     "verify_sent_to": "We sent a verification link to\n{{email}}",
     "verified_button": "I've verified my email",
     "resend_email": "Resend email",
-    "sign_out": "Sign Out"
+    "check_spam": "Can't find the email? It very likely ended up in your spam folder — check there first.",
+    "sign_out": "Sign Out",
+    "forgot_password": "Forgot password?",
+    "forgot_password_email_required": "Please enter your email address first.",
+    "reset_sent": "If that email is registered, you'll receive a reset link shortly."
   },
   "profile": {
     "title": "Profile",
@@ -68,6 +72,7 @@
     "calories": "Calories",
     "steps": "Steps",
     "add_steps": "Add Steps",
+    "daily_limit_reached": "Daily limit reached — try again tomorrow",
     "total_steps": "Total Steps",
     "physical_measurements": "Physical Measurements",
     "physical_stats": "Physical Stats",
@@ -106,10 +111,10 @@
     "map": "Map",
     "search_location": "Search Location",
     "group_code": "Group Code",
-    "group_code_hint": "E.G. XY789",
+    "group_code_hint": "E.G. XY3K9PQA",
     "join_group_title": "Join a Group Journey",
     "join_existing": "Join Existing Group",
-    "join_instructions": "Enter the 6-digit code shared by your friend to join their progress.",
+    "join_instructions": "Enter the 8-digit code shared by your friend to join their progress.",
     "share_code_instructions": "Share this code with your friends to let them join this {{name}} journey.",
     "code_not_found": "No journey found with this code. Please check and try again.",
     "join_permission_denied": "Permission denied. Please check that you are signed in.",
@@ -139,12 +144,18 @@
     "badges": "Badges",
     "top_badge": "Top Badge",
     "none_yet": "None yet",
+    "finished_goals": "Finished Goals",
+    "badge_first_steps": "First Steps",
+    "badge_century": "Century",
+    "badge_globetrotter": "Globetrotter",
+    "badge_team_player": "Team Player",
     "goal_reached": "Goal Reached! 🎉",
     "goal_reached_short": "Goal Reached!",
     "champion": "Champion! 🏆",
     "congratulations_journey": "Congratulations! You've completed the {{name}} journey.",
     "someone_arrived": "Someone Arrived! 🏁",
-    "race_win": "You crossed the finish line first in {{name}}!"
+    "race_win": "You crossed the finish line first in {{name}}!",
+    "race_finish": "You finished #{{position}} in {{name}}!"
   },
   "general": {
     "general": "General",

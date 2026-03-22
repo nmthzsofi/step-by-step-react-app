@@ -26,7 +26,11 @@
     "verify_sent_to": "Megerősítő linket küldtünk\n{{email}} címre",
     "verified_button": "Megerősítettem az emailem",
     "resend_email": "Email újraküldése",
-    "sign_out": "Kijelentkezés"
+    "check_spam": "Nem találod az emailt? Valószínűleg a spam mappába került — először ott keresd.",
+    "sign_out": "Kijelentkezés",
+    "forgot_password": "Elfelejtetted a jelszavad?",
+    "forgot_password_email_required": "Kérjük, először add meg az emailcímed.",
+    "reset_sent": "Ha ez az email cím regisztrálva van, hamarosan kapsz egy visszaállítási linket."
   },
   "profile": {
     "title": "Profil",
@@ -69,6 +73,7 @@
     "calories": "Kalória",
     "steps": "Lépés",
     "add_steps": "Lépés hozzáadása",
+    "daily_limit_reached": "Napi korlát elérve — próbáld holnap",
     "total_steps": "Összes lépés",
     "physical_measurements": "Fizikai méretek",
     "physical_stats": "Fizikai adatok",
@@ -109,7 +114,7 @@
     "group_code": "Csoportkód",
     "join_group_title": "Csatlakozás csoportos utazáshoz",
     "join_existing": "Csatlakozás már meglévő csoporthoz",
-    "join_instructions": "Add meg a barátod által megosztott 6 jegyű kódot a csatlakozáshoz.",
+    "join_instructions": "Add meg a barátod által megosztott 8 jegyű kódot a csatlakozáshoz.",
     "share_code_instructions": "Oszd meg ezt a kódot a barátaiddal, hogy csatlakozhassanak a(z) {{name}} utazáshoz.",
     "code_not_found": "Nem található utazás ezzel a kóddal. Ellenőrizd és próbáld újra.",
     "join_permission_denied": "Nincs jogosultságod csatlakozni. Ellenőrizd, hogy bejelentkeztél-e.",
@@ -139,12 +144,18 @@
     "badges": "Kitűzők",
     "top_badge": "Legjobb kitűző",
     "none_yet": "Még nincs",
+    "finished_goals": "Befejezett célok",
+    "badge_first_steps": "Első lépések",
+    "badge_century": "Százezres",
+    "badge_globetrotter": "Világjáró",
+    "badge_team_player": "Csapatjátékos",
     "goal_reached": "Cél elérve! 🎉",
     "goal_reached_short": "Cél elérve!",
     "champion": "Bajnok! 🏆",
     "congratulations_journey": "Gratulálunk! Teljesítetted a(z) {{name}} utazást.",
     "someone_arrived": "Valaki megérkezett! 🏁",
-    "race_win": "Elsőként értél célba a(z) {{name}} versenyen!"
+    "race_win": "Elsőként értél célba a(z) {{name}} versenyen!",
+    "race_finish": "A(z) {{name}} versenyen a {{position}}. helyen végeztél!"
   },
   "general": {
     "general": "Általános",

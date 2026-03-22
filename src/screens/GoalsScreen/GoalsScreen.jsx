@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useGoalStore } from "../../store/goalStore";
+import { useAuthStore } from "../../store/authStore";
 import GoalCard from "../../components/GoalCard/GoalCard";
 import GoalDetailModal from "../../components/GoalDetailModal/GoalDetailModal";
 import CreateGoalModal from "../../components/CreateGoalModal/CreateGoalModal";
@@ -19,6 +20,18 @@ import { Colors, Typography, Spacing, Radius } from "../../constants/theme";
 export default function GoalsScreen() {
   const { t } = useTranslation();
   const goals = useGoalStore((s) => s.goals);
+  const uid = useAuthStore((s) => s.firebaseUser?.uid);
+
+  const getGoalProgress = (goal) => {
+    if (!goal.totalSteps || !goal.members?.length) return 0;
+    if (goal.type === "cooperative") {
+      return goal.members.reduce((s, m) => s + m.steps, 0) / goal.totalSteps;
+    }
+    return (goal.members.find((m) => m.id === uid)?.steps ?? 0) / goal.totalSteps;
+  };
+
+  const activeGoals = goals.filter((g) => getGoalProgress(g) < 1);
+  const completedGoals = goals.filter((g) => getGoalProgress(g) >= 1);
 
   const [selectedGoal, setSelectedGoal] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -58,15 +71,36 @@ export default function GoalsScreen() {
             </Text>
           </View>
         ) : (
-          goals.map((goal) => (
-            <TouchableOpacity
-              key={goal.id}
-              onPress={() => openGoal(goal)}
-              activeOpacity={0.85}
-            >
-              <GoalCard goal={goal} isSelected={false} />
-            </TouchableOpacity>
-          ))
+          <>
+            {activeGoals.map((goal) => (
+              <TouchableOpacity
+                key={goal.id}
+                onPress={() => openGoal(goal)}
+                activeOpacity={0.85}
+              >
+                <GoalCard goal={goal} isSelected={false} />
+              </TouchableOpacity>
+            ))}
+
+            {completedGoals.length > 0 && (
+              <>
+                <View style={styles.sectionSeparator}>
+                  <View style={styles.sectionLine} />
+                  <Text style={styles.sectionLabel}>{t("progress.finished_goals").toUpperCase()}</Text>
+                  <View style={styles.sectionLine} />
+                </View>
+                {completedGoals.map((goal) => (
+                  <TouchableOpacity
+                    key={goal.id}
+                    onPress={() => openGoal(goal)}
+                    activeOpacity={0.85}
+                  >
+                    <GoalCard goal={goal} isSelected={false} />
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -170,6 +204,23 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: Spacing.xl,
     lineHeight: 20,
+  },
+  sectionSeparator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginVertical: Spacing.xs,
+  },
+  sectionLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.divider,
+  },
+  sectionLabel: {
+    fontFamily: Typography.fontLabel,
+    fontSize: Typography.xs,
+    color: Colors.textTertiary,
+    letterSpacing: Typography.widest,
   },
   backdrop: {
     flex: 1,

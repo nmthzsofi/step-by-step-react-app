@@ -19,10 +19,10 @@ import styles from "./ProfileScreen.styles";
 import SettingsModal from "../../components/SettingsModal/SettingsModal";
 
 const BADGES = {
-  firstSteps: { label: "First Steps", ionicon: "walk" },
-  century: { label: "Century", ionicon: "star" },
-  globetrotter: { label: "Globetrotter", ionicon: "earth" },
-  teamPlayer: { label: "Team Player", ionicon: "people" },
+  firstSteps: { labelKey: "progress.badge_first_steps", ionicon: "walk" },
+  century: { labelKey: "progress.badge_century", ionicon: "star" },
+  globetrotter: { labelKey: "progress.badge_globetrotter", ionicon: "earth" },
+  teamPlayer: { labelKey: "progress.badge_team_player", ionicon: "people" },
 };
 
 const formatLargeNumber = (n) => {
@@ -140,7 +140,7 @@ export default function ProfileScreen() {
                 <Text style={styles.tileTitle}>{t("progress.top_badge")}</Text>
               </View>
               <Text style={styles.tileValue}>
-                {topBadge ? BADGES[topBadge]?.label : t("progress.none_yet")}
+                {topBadge ? t(BADGES[topBadge]?.labelKey) : t("progress.none_yet")}
               </Text>
             </View>
             <View style={styles.tile}>
@@ -172,7 +172,7 @@ export default function ProfileScreen() {
                     color={Colors.accent}
                   />
                 </View>
-                <Text style={styles.listLabel}>{BADGES[badge]?.label}</Text>
+                <Text style={styles.listLabel}>{t(BADGES[badge]?.labelKey)}</Text>
                 <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
               </View>
             ))}

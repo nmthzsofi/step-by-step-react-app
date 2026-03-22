@@ -42,7 +42,9 @@ const MemberBubble = ({ name, isSelf }) => (
 export default function MapScreen() {
   const { t } = useTranslation();
   const mapRef = useRef(null);
+  const scrollRef = useRef(null);
   const [showAddActivity, setShowAddActivity] = useState(false);
+  const [celebrationVisible, setCelebrationVisible] = useState(false);
 
   const goals = useGoalStore((s) => s.goals);
   const selectedIndex = useGoalStore((s) => s.selectedGoalIndex);
@@ -55,10 +57,30 @@ export default function MapScreen() {
   const { firebaseUser } = useAuthStore();
   const uid = firebaseUser?.uid;
 
+  const visibleGoals = goals.filter((g) => !g.isFullyCompleted);
+
   const selectedGoal =
-    goals.length > 0 && selectedIndex < goals.length
-      ? goals[selectedIndex]
+    visibleGoals.length > 0 && selectedIndex < visibleGoals.length
+      ? visibleGoals[selectedIndex]
       : null;
+
+  // Delay celebration rendering so the AddActivityModal sheet finishes dismissing first
+  useEffect(() => {
+    if (!showCelebration) {
+      setCelebrationVisible(false);
+      return;
+    }
+    const timer = setTimeout(() => setCelebrationVisible(true), 400);
+    return () => clearTimeout(timer);
+  }, [showCelebration]);
+
+  // Clamp selectedIndex when a goal is removed from visibleGoals (e.g. just completed)
+  useEffect(() => {
+    if (visibleGoals.length === 0 || selectedIndex < visibleGoals.length) return;
+    const newIndex = visibleGoals.length - 1;
+    setSelectedIndex(newIndex);
+    scrollRef.current?.scrollTo({ x: newIndex * width, animated: false });
+  }, [visibleGoals.length]);
 
   // Focus map on selected goal
   useEffect(() => {
@@ -206,8 +228,9 @@ export default function MapScreen() {
       {/* UI overlay */}
       <View style={styles.overlay} pointerEvents="box-none">
         {/* Goal cards pager */}
-        {goals.length > 0 && (
+        {visibleGoals.length > 0 && (
           <ScrollView
+            ref={scrollRef}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
@@ -215,12 +238,12 @@ export default function MapScreen() {
             contentContainerStyle={styles.cardScrollerContent}
             onMomentumScrollEnd={(e) => {
               const index = Math.round(
-                e.nativeEvent.contentOffset.x / (width - Spacing.xxl),
+                e.nativeEvent.contentOffset.x / width,
               );
               setSelectedIndex(index);
             }}
           >
-            {goals.map((goal, index) => (
+            {visibleGoals.map((goal, index) => (
               <View
                 key={goal.id ?? index}
                 style={[
@@ -258,7 +281,7 @@ export default function MapScreen() {
       />
 
       {/* Celebration overlay */}
-      {showCelebration && (
+      {celebrationVisible && (
         <CelebrationView
           title={celebrationTitle}
           message={celebrationMsg}
@@ -284,12 +307,10 @@ const styles = StyleSheet.create({
     marginTop: 60,
   },
   cardScrollerContent: {
-    paddingHorizontal: Spacing.base,
-    gap: Spacing.base,
   },
   cardWrapper: {
-    width: width - Spacing.xxl,
-    marginRight: Spacing.sm,
+    width: width,
+    paddingHorizontal: Spacing.base,
   },
   spacer: {
     flex: 1,

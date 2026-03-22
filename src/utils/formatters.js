@@ -38,7 +38,7 @@ export const earnedBadges = (totalSteps, hasTeamPlayerBadge) => {
 
 export const generateShareCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const array = new Uint8Array(8);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => chars[byte % chars.length]).join("");
+  return Array.from({ length: 8 }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
 };

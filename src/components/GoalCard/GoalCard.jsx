@@ -13,12 +13,17 @@ import {
 
 export default function GoalCard({ goal, isSelected }) {
   const { t } = useTranslation();
-  const { displayUnit } = useAuthStore();
+  const { displayUnit, firebaseUser } = useAuthStore();
+  const uid = firebaseUser?.uid;
+
+  const personalSteps = goal.members?.find((m) => m.id === uid)?.steps ?? 0;
+  const cooperativeSteps = (goal.members ?? []).reduce((s, m) => s + m.steps, 0);
+  const currentSteps = goal.type === "cooperative" ? cooperativeSteps : personalSteps;
 
   const progress =
-    goal.totalSteps > 0 ? Math.min(goal.currentSteps / goal.totalSteps, 1) : 0;
+    goal.totalSteps > 0 ? Math.min(currentSteps / goal.totalSteps, 1) : 0;
 
-  const remainingSteps = Math.max(0, goal.totalSteps - goal.currentSteps);
+  const remainingSteps = Math.max(0, goal.totalSteps - currentSteps);
   const isComplete = remainingSteps === 0 && goal.totalSteps > 0;
   const themeColor = goal.isFullyCompleted ? Colors.success : Colors.accent;
 
