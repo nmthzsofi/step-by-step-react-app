@@ -84,7 +84,6 @@ export default function SettingsModal({ visible, onDismiss }) {
       await saveDisplayUnit(uid, displayUnit);
       onDismiss();
     } catch (err) {
-      console.error("Settings save error:", err);
     } finally {
       setIsSaving(false);
     }

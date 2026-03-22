@@ -126,7 +126,6 @@ export default function CreateGoalModal({ visible, onDismiss }) {
       resetForm();
       onDismiss();
     } catch (err) {
-      console.error("Create goal error:", err);
     } finally {
       setIsCreating(false);
     }

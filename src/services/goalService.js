@@ -10,7 +10,7 @@ import {
   where,
   onSnapshot,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
 import { useGoalStore } from "../store/goalStore";
 import { useAuthStore } from "../store/authStore";
 import { generateShareCode } from "../utils/formatters";
@@ -65,6 +65,7 @@ export const listenToGoal = (goalId) => {
 
 // ─── Add Steps ─────────────────────────────────────────────────────────
 export const addSteps = async (steps, userUID) => {
+  if (auth.currentUser?.uid !== userUID) return;
   const { goals, updateGoal, triggerCelebration } = useGoalStore.getState();
 
   for (const goal of goals) {
@@ -140,8 +141,7 @@ const updateStepsInFirebase = async (goalId, memberUID, newSteps) => {
   const userRef = doc(db, "users", memberUID);
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
-    const current = userSnap.data().totalStepsAllTime ?? 0;
-    await updateDoc(userRef, { totalStepsAllTime: current + newSteps });
+    await updateDoc(userRef, { totalStepsAllTime: increment(newSteps) });
   }
 };
 

@@ -100,7 +100,6 @@ export default function OnboardingScreen() {
       await completeOnboarding(uid);
     } catch (err) {
       setErrorMessage(t("general.save_failed"));
-      console.error("Onboarding error:", err);
     } finally {
       setIsLoading(false);
     }

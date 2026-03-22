@@ -81,6 +81,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
   if (!goal) return null;
 
   const uid = firebaseUser?.uid;
+  const isCreator = uid === goal.creatorUID;
   const hasMultipleMembers = (goal.members?.length ?? 0) > 1;
   const sortedMembers = [...(goal.members ?? [])].sort(
     (a, b) => b.steps - a.steps,
@@ -107,7 +108,7 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
   };
 
   const handleSave = async () => {
-    if (!goal.id) return;
+    if (!goal.id || !isCreator) return;
     setIsSaving(true);
     try {
       const isGroupGoal = goalType !== "individual";
@@ -128,15 +129,14 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
         coordinates: endCoord,
       });
       onDismiss();
-    } catch (err) {
-      console.error("Save error:", err);
+    } catch {
+      // silent — Firestore will also reject unauthorized writes
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = () => {
-    const isCreator = uid === goal.creatorUID;
     const isGroupGoal = goal.isGroupGoal;
 
     const title = isGroupGoal && !isCreator ? t("journey.exit_group") : t("journey.delete_journey");
@@ -191,11 +191,11 @@ export default function GoalDetailModal({ goal, visible, onDismiss }) {
               <Text style={styles.cancel}>{t("general.cancel")}</Text>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>{t("journey.edit_journey")}</Text>
-            <TouchableOpacity onPress={handleSave} disabled={isSaving}>
+            <TouchableOpacity onPress={handleSave} disabled={isSaving || !isCreator}>
               {isSaving ? (
                 <ActivityIndicator />
               ) : (
-                <Text style={styles.done}>{t("general.done")}</Text>
+                <Text style={[styles.done, !isCreator && styles.doneDisabled]}>{t("general.done")}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -467,6 +467,9 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontBodyMedium,
     fontSize: Typography.base,
     color: Colors.accent,
+  },
+  doneDisabled: {
+    color: Colors.textTertiary,
   },
   content: { padding: Spacing.base, gap: Spacing.base, paddingBottom: 40 },
   section: { gap: Spacing.xs },

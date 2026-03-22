@@ -47,7 +47,6 @@ export default function JoinGroupModal({ visible, onDismiss }) {
       setCode("");
       onDismiss();
     } catch (err) {
-      console.error("joinGoal error:", err?.code, err?.message);
       if (err?.code === "permission-denied") {
         setErrorMessage(t("journey.join_permission_denied"));
       } else {
