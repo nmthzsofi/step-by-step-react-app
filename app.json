@@ -1,12 +1,46 @@
 {
   "expo": {
-    "name": "lepesrol-lepesre-react",
-    "slug": "lepesrol-lepesre-react",
-    "scheme": "lepesrol-lepesre-react",
+    "name": "Lépésről Lépésre",
+    "slug": "lepesrol-lepesre",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.zsofianemeth.lepesrollepesre",
+      "buildNumber": "1",
+      "googleServicesFile": "secret:GOOGLE_SERVICES_PLIST",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.zsofianemeth.lepesrollepesre",
+      "versionCode": 1,
+      "googleServicesFile": "secret:GOOGLE_SERVICES_JSON"
+    },
+    "scheme": "lepesrol-lepesre",
     "plugins": [
       "expo-router",
       "@react-native-community/datetimepicker",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8ceff20a-a7d1-4676-947a-027efc646a3a"
+      }
+    },
+    "owner": "nemethzsofia442"
   }
 }
