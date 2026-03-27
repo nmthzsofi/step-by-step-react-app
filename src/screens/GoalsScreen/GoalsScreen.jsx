@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  list: { padding: Spacing.base, gap: Spacing.base, paddingBottom: 100 },
-  emptyState: { alignItems: "center", paddingTop: 80, gap: Spacing.md },
+  list: { flexGrow: 1, padding: Spacing.base, gap: Spacing.base, paddingBottom: 100 },
+  emptyState: { flex: 1, alignItems: "center", justifyContent: "center", gap: Spacing.md },
   emptyTitle: {
     fontFamily: Typography.fontDisplayItalic,
     fontSize: Typography.xl,

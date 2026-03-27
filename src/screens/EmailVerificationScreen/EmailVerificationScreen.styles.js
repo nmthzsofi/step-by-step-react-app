@@ -14,7 +14,9 @@ export default StyleSheet.create({
     paddingVertical: Spacing.xl,
   },
   centerBlock: {
+    flex: 1,
     alignItems: "center",
+    justifyContent: "center",
     gap: Spacing.xl,
     width: "100%",
   },

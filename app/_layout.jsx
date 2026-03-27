@@ -25,6 +25,7 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const [isReady, setIsReady] = useState(false);
+  const [isNavigated, setIsNavigated] = useState(false);
 
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const isEmailVerified = useAuthStore((s) => s.isEmailVerified);
@@ -66,6 +67,7 @@ export default function RootLayout() {
     } else if (!inTabs) {
       router.replace("/(tabs)");
     }
+    setIsNavigated(true);
   }, [
     isReady,
     fontsLoaded,
@@ -75,7 +77,7 @@ export default function RootLayout() {
     isProfileLoaded,
   ]);
 
-  if (!isReady || !fontsLoaded || (isLoggedIn && !isProfileLoaded)) {
+  if (!isReady || !fontsLoaded || (isLoggedIn && !isProfileLoaded) || !isNavigated) {
     return <View style={{ flex: 1, backgroundColor: Colors.background }} />;
   }
 

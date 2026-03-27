@@ -112,6 +112,7 @@
     "map": "Térkép",
     "search_location": "Uticél kiválasztása",
     "group_code": "Csoportkód",
+    "group_code_hint": "XY3K9PQA",
     "join_group_title": "Csatlakozás csoportos utazáshoz",
     "join_existing": "Csatlakozás már meglévő csoporthoz",
     "join_instructions": "Add meg a barátod által megosztott 8 jegyű kódot a csatlakozáshoz.",

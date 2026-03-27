@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Modal,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -63,7 +65,10 @@ export default function JoinGroupModal({ visible, onDismiss }) {
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onDismiss}>
@@ -109,7 +114,7 @@ export default function JoinGroupModal({ visible, onDismiss }) {
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

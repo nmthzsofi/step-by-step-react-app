@@ -139,7 +139,7 @@ export default function ProfileScreen() {
                 <Ionicons name="medal" size={14} color={Colors.accent} style={styles.tileIcon} />
                 <Text style={styles.tileTitle}>{t("progress.top_badge")}</Text>
               </View>
-              <Text style={styles.tileValue}>
+              <Text style={styles.tileValue} numberOfLines={1} adjustsFontSizeToFit>
                 {topBadge ? t(BADGES[topBadge]?.labelKey) : t("progress.none_yet")}
               </Text>
             </View>
