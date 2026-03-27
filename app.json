@@ -15,7 +15,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.zsofianemeth.lepesrollepesre",
       "buildNumber": "1",
-      "googleServicesFile": "secret:GOOGLE_SERVICES_PLIST",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -27,7 +27,7 @@
       },
       "package": "com.zsofianemeth.lepesrollepesre",
       "versionCode": 1,
-      "googleServicesFile": "secret:GOOGLE_SERVICES_JSON"
+      "googleServicesFile": "./google-services.json"
     },
     "scheme": "lepesrol-lepesre",
     "plugins": [
